@@ -32,6 +32,13 @@
 | RNF-08 | Usabilidade | Interface deve ser utilizável em sessões curtas (mobile-first, uso "no ônibus, no almoço") |
 | RNF-09 | Idioma | Conteúdo (perguntas, explicações, interface) deve estar em português — endereça a dor original de material em inglês |
 
+## Decisões de infraestrutura (fechadas em 2026-08-06)
+
+- **Banco de dados + Auth: Supabase.** Escolhido pelo MVP precisar de algo simples pra validar a ideia antes de investir em infra própria. Resolve de saída:
+  - Postgres gerenciado (tier gratuito cobre o volume de uso do MVP — atende RNF-05)
+  - Auth nativo com e-mail/senha **e** OAuth Google prontos, sem precisar implementar isso manualmente (atende RF-01 direto)
+  - Reduz a superfície de infra que o solo dev precisa manter (atende RNF-06)
+
 ## Em aberto
 
-- **Hosting/infra concreta**: ainda não decidido onde rodar (ex: GCP direto, ou algo mais simples tipo Railway/Render/Supabase para não lidar com infra GCP manualmente). Deve ser resolvido durante o system design (API, banco, deploy), respeitando RNF-05 e RNF-06.
+- **Onde roda a camada de API/motor** (a lógica do SRS/mastery/gate descrita em `core-loop-srs.md`): direto como Supabase Edge Functions, ou um serviço separado (ex: FastAPI) hospedado em algo como Railway/Render/Fly, consumindo o Postgres do Supabase. A ser resolvido no system design, respeitando RNF-01 (motor como lógica pura testável) e RNF-06 (simplicidade pra solo dev).
