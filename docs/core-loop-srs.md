@@ -17,8 +17,8 @@ Cada par usuário-questão guarda:
 - `repetition_count += 1`
 - Se `repetition_count == 1`: `interval = 1 dia`
 - Se `repetition_count == 2`: `interval = 3 dias`
-- Se `repetition_count >= 3`: `interval = round(interval_anterior * EF)`
-- `EF = max(1.3, EF + 0.1)`
+- Se `repetition_count >= 3`: `interval = round(interval_anterior * EF)` — **usa o EF de *antes* deste acerto** (o quão fácil a questão vinha sendo até aqui), não o EF já incrementado por este acerto
+- `EF = max(1.3, EF + 0.1)` — atualizado *depois* de calcular o intervalo, vale pro próximo ciclo
 
 **Errou:**
 - `repetition_count = 0`
