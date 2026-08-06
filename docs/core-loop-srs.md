@@ -57,14 +57,14 @@ Proposta: desbloqueia o próximo tópico quando `% domínio >= 80%` **e** o usu�
 - XP menor por revisão bem-sucedida (ex: 3 XP) — recompensa mais quem aprende coisa nova, mas ainda incentiva revisão
 - Streak: contador de dias consecutivos com pelo menos 1 lição completa (session-based, não importa quantas lições no dia)
 
-## Perguntas em aberto (decisões de produto disfarçadas de matemática)
+## Decisões de produto (fechadas em 2026-08-06)
 
-Ainda sem resposta do dono do projeto:
+1. **Threshold de 80% para destravar tópico** → **mantido em 80%**. Alto o suficiente pra garantir domínio real antes de avançar, mas alcançável sem exigir perfeição — padrão comum em apps de mastery learning.
+2. **`interval_atual` como proxy de half-life** → **mantido como está** (aproximação simples, sem virar HLR agora). Sem dados reais de usuários ainda para calibrar um modelo mais sofisticado — investir nisso agora seria over-engineering prematuro. Reavaliar quando houver volume de dados de uso real.
+3. **XP menor em revisão (3 vs 10)** → **mantido**. Recompensa mais quem avança em conteúdo novo, mas ainda incentiva revisão o suficiente pra não ser ignorada; igualar arriscaria incentivar só responder questões novas e negligenciar a fila de repetição espaçada.
 
-1. **Threshold de 80% para destravar tópico** — está bom, muito rígido ou muito frouxo?
-2. **`interval_atual` como proxy de half-life** é uma simplificação grosseira — serve para o MVP (sem dados reais para calibrar melhor), ou vale um modelo mais preciso desde já?
-3. **XP menor em revisão (3 vs 10)** faz sentido, ou deveria ser igual para não desincentivar revisão?
+Com isso, o motor do core loop está **fechado para o MVP** — nenhuma constante em aberto bloqueando a implementação.
 
-## Próximo passo depois de fechar essas 3 perguntas
+## Próximo passo
 
 Modelagem de domínio (entidades: Usuário, Certificação, Domínio, Questão, Tentativa, etc.) → system design (API, banco, deploy) → setup do projeto + primeiro ciclo de TDD.

@@ -12,7 +12,7 @@ Side project solo, ainda em fase de spec/design — nenhuma linha de código de 
 | Pesquisa de mercado e concorrência | ✅ |
 | Spec de MVP fechado | ✅ |
 | Premissa arquitetural travada (agnóstico de provedor) | ✅ |
-| Motor do core loop (SRS + % domínio + gate) | 🔄 desenhado, faltam 3 decisões de produto em aberto |
+| Motor do core loop (SRS + % domínio + gate) | ✅ |
 | Modelagem de domínio (entidades) | ⏳ próximo passo |
 | System design (API, banco, deploy) | ⏳ |
 | Setup do projeto + primeiro ciclo de TDD | ⏳ |
@@ -38,10 +38,9 @@ Restrições de partida:
 
 ## Roadmap imediato
 
-1. Resolver as 3 perguntas em aberto do motor do core loop (ver [`core-loop-srs.md`](docs/core-loop-srs.md))
-2. Modelagem de domínio (entidades: Usuário, Certificação, Domínio, Questão, Tentativa, etc.)
-3. System design (API, banco de dados, deploy)
-4. Setup do projeto + primeiro ciclo de TDD
+1. Modelagem de domínio (entidades: Usuário, Certificação, Domínio, Questão, Tentativa, etc.)
+2. System design (API, banco de dados, deploy)
+3. Setup do projeto + primeiro ciclo de TDD
 
 ## Nota sobre origem deste documento
 
