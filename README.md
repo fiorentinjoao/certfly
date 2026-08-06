@@ -14,8 +14,9 @@ Side project solo, ainda em fase de spec/design — nenhuma linha de código de 
 | Premissa arquitetural travada (agnóstico de provedor) | ✅ |
 | Motor do core loop (SRS + % domínio + gate) | ✅ |
 | Modelagem de domínio (entidades) | ⏳ próximo passo |
-| System design (API, banco, deploy) | ⏳ |
-| Setup do projeto + primeiro ciclo de TDD | ⏳ |
+| Requisitos funcionais e não funcionais (RF/RNF) | ✅ |
+| System design (Flutter + FastAPI + Supabase, schema, endpoints) | ✅ |
+| Setup do projeto + primeiro ciclo de TDD | ⏳ próximo passo |
 
 ## Contexto
 
@@ -36,13 +37,14 @@ Restrições de partida:
 | [`docs/architecture-decisions.md`](docs/architecture-decisions.md) | Premissas arquiteturais travadas — modelagem 100% agnóstica de provedor/certificação |
 | [`docs/core-loop-srs.md`](docs/core-loop-srs.md) | Motor de mastery e repetição espaçada (SM-2 adaptado) — fórmulas e decisões fechadas |
 | [`docs/requirements.md`](docs/requirements.md) | Requisitos funcionais e não funcionais do MVP (RF/RNF) |
+| [`docs/system-design.md`](docs/system-design.md) | Stack, arquitetura, schema do banco, endpoints e plano de deploy do MVP |
 
 ## Roadmap imediato
 
 1. Requisitos funcionais e não funcionais ✅
-2. Modelagem de domínio (entidades: Usuário, Certificação, Domínio, Questão, Tentativa, etc.) — em discussão
-3. System design (API, banco de dados, deploy)
-4. Setup do projeto + primeiro ciclo de TDD
+2. Modelagem de domínio (entidades) ✅
+3. System design (stack, schema, endpoints, deploy) ✅
+4. Setup do projeto + primeiro ciclo de TDD — próximo passo
 
 ## Nota sobre origem deste documento
 
