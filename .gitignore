@@ -13,6 +13,8 @@ __pycache__/
 .venv/
 venv/
 .env
+*.egg-info/
+.pytest_cache/
 
 # Node (frontend provável)
 node_modules/
