@@ -25,7 +25,7 @@ migrate_working_dir/
 
 # Config de dev local — gerado por scripts/seed_dev.py, contém um JWT
 # (mesmo sendo de teste, não deve ser commitado).
-dev.json
+dev*.json
 
 # Flutter/Dart/Pub related
 **/doc/api/

@@ -12,7 +12,16 @@ class HomeScreen extends StatefulWidget {
   final ApiClient apiClient;
   final String certificationId;
 
-  const HomeScreen({super.key, required this.apiClient, required this.certificationId});
+  /// Null quando a sessão é via token de dev (scripts/seed_dev.py) — não
+  /// há do que "sair" nesse caminho, então o menu de logout nem aparece.
+  final VoidCallback? onLogout;
+
+  const HomeScreen({
+    super.key,
+    required this.apiClient,
+    required this.certificationId,
+    this.onLogout,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -55,9 +64,18 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
-            child: ClipOval(
-              child: Image.asset('assets/images/mascot_avatar.png', width: 34, height: 34),
-            ),
+            child: widget.onLogout == null
+                ? ClipOval(
+                    child: Image.asset('assets/images/mascot_avatar.png', width: 34, height: 34),
+                  )
+                : PopupMenuButton<void>(
+                    icon: ClipOval(
+                      child: Image.asset('assets/images/mascot_avatar.png', width: 34, height: 34),
+                    ),
+                    itemBuilder: (context) => [
+                      PopupMenuItem(onTap: widget.onLogout, child: const Text('Sair')),
+                    ],
+                  ),
           ),
         ],
       ),

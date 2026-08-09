@@ -38,6 +38,9 @@ dependencies:
   # Cliente HTTP pra falar com a API FastAPI (ver lib/api/api_client.dart).
   http: ^1.2.0
 
+  # Login real (RF-01) — e-mail/senha via Supabase Auth (ver lib/auth/).
+  supabase_flutter: ^2.17.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
