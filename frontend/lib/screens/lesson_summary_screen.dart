@@ -19,21 +19,23 @@ class LessonSummaryScreen extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.emoji_events, size: 64, color: Theme.of(context).colorScheme.primary),
-                const SizedBox(height: 16),
+                Image.asset('assets/images/mascot_hero.png', height: 180),
+                const SizedBox(height: 8),
                 Text('Lição concluída!', style: Theme.of(context).textTheme.headlineSmall),
                 const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _SummaryStat(icon: Icons.bolt, value: '+${summary.xpEarned}', label: 'XP'),
+                    _SummaryStat(icon: Icons.bolt_rounded, color: AppColors.green, value: '+${summary.xpEarned}', label: 'XP'),
                     _SummaryStat(
-                      icon: Icons.local_fire_department,
+                      icon: Icons.local_fire_department_rounded,
+                      color: AppColors.amber,
                       value: '${summary.currentStreak}',
                       label: 'dias seguidos',
                     ),
                     _SummaryStat(
-                      icon: Icons.insights,
+                      icon: Icons.insights_rounded,
+                      color: AppColors.purpleLight,
                       value: '${(summary.masteryPct * 100).round()}%',
                       label: 'domínio',
                     ),
@@ -42,28 +44,31 @@ class LessonSummaryScreen extends StatelessWidget {
                 if (summary.topicUnlocked) ...[
                   const SizedBox(height: 24),
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: AppTheme.correct.withValues(alpha: 0.12),
+                      color: AppColors.green.withValues(alpha: 0.14),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.lock_open, color: AppTheme.correct),
-                        const SizedBox(width: 8),
-                        const Text(
+                        Icon(Icons.lock_open_rounded, color: AppColors.green),
+                        SizedBox(width: 8),
+                        Text(
                           'Próximo tópico desbloqueado!',
-                          style: TextStyle(color: AppTheme.correct, fontWeight: FontWeight.bold),
+                          style: TextStyle(color: AppColors.green, fontWeight: FontWeight.w700),
                         ),
                       ],
                     ),
                   ),
                 ],
                 const SizedBox(height: 32),
-                FilledButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Voltar para o início'),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Voltar para o início'),
+                  ),
                 ),
               ],
             ),
@@ -76,15 +81,16 @@ class LessonSummaryScreen extends StatelessWidget {
 
 class _SummaryStat extends StatelessWidget {
   final IconData icon;
+  final Color color;
   final String value;
   final String label;
-  const _SummaryStat({required this.icon, required this.value, required this.label});
+  const _SummaryStat({required this.icon, required this.color, required this.value, required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Icon(icon, color: Theme.of(context).colorScheme.primary),
+        Icon(icon, color: color),
         const SizedBox(height: 4),
         Text(value, style: Theme.of(context).textTheme.titleLarge),
         Text(label, style: Theme.of(context).textTheme.bodySmall),

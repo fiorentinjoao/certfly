@@ -106,8 +106,10 @@ class _LessonScreenState extends State<LessonScreen> {
                     padding: const EdgeInsets.all(16),
                     children: [
                       Text(
-                        'Questão ${_currentIndex + 1} de ${lesson.questions.length}',
-                        style: Theme.of(context).textTheme.labelLarge,
+                        'QUESTÃO ${_currentIndex + 1} DE ${lesson.questions.length}',
+                        style: Theme.of(
+                          context,
+                        ).textTheme.labelLarge?.copyWith(letterSpacing: 0.6, fontSize: 12),
                       ),
                       const SizedBox(height: 8),
                       Text(question.prompt, style: Theme.of(context).textTheme.titleLarge),
@@ -172,24 +174,28 @@ class _ChoiceCard extends StatelessWidget {
     }
 
     Color? borderColor;
+    Color? tintColor;
     IconData? trailingIcon;
     if (explained != null) {
       if (explained.isCorrect) {
-        borderColor = AppTheme.correct;
-        trailingIcon = Icons.check_circle;
+        borderColor = AppColors.green;
+        tintColor = AppColors.green.withValues(alpha: 0.12);
+        trailingIcon = Icons.check_circle_rounded;
       } else if (selected) {
-        borderColor = AppTheme.wrong;
-        trailingIcon = Icons.cancel;
+        borderColor = AppColors.red;
+        tintColor = AppColors.red.withValues(alpha: 0.12);
+        trailingIcon = Icons.cancel_rounded;
       }
     }
 
     return Card(
+      color: tintColor,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: borderColor != null ? BorderSide(color: borderColor, width: 2) : BorderSide.none,
+        borderRadius: BorderRadius.circular(14),
+        side: borderColor != null ? BorderSide(color: borderColor, width: 1.5) : BorderSide.none,
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         onTap: enabled ? onTap : null,
         child: Padding(
           padding: const EdgeInsets.all(14),
@@ -198,18 +204,15 @@ class _ChoiceCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Expanded(child: Text(choice.text)),
+                  Expanded(
+                    child: Text(choice.text, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  ),
                   if (trailingIcon != null) Icon(trailingIcon, color: borderColor),
                 ],
               ),
               if (explained != null) ...[
                 const SizedBox(height: 8),
-                Text(
-                  explained.explanation,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-                ),
+                Text(explained.explanation, style: Theme.of(context).textTheme.bodySmall),
               ],
             ],
           ),
@@ -227,12 +230,12 @@ class _XpBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final label = isCorrect ? '+$xpEarned XP' : 'Sem XP dessa vez';
-    final color = isCorrect ? AppTheme.correct : AppTheme.wrong;
+    final color = isCorrect ? AppColors.green : AppColors.red;
     return Align(
       alignment: Alignment.centerLeft,
       child: Chip(
-        avatar: Icon(isCorrect ? Icons.bolt : Icons.close, color: Colors.white, size: 18),
-        label: Text(label, style: const TextStyle(color: Colors.white)),
+        avatar: Icon(isCorrect ? Icons.bolt_rounded : Icons.close_rounded, color: Colors.white, size: 18),
+        label: Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
         backgroundColor: color,
       ),
     );

@@ -18,7 +18,7 @@ class CertFlyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'CertFly',
-      theme: AppTheme.light(),
+      theme: AppTheme.dark(),
       debugShowCheckedModeBanner: false,
       home: const _Bootstrap(),
     );

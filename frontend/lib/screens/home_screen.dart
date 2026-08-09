@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../api/api_client.dart';
 import '../models/me.dart';
 import '../models/progress.dart';
+import '../theme.dart';
 import 'lesson_screen.dart';
 
 /// GET /me + GET /certification/{id}/progress (RF-02) — trilha de
@@ -49,7 +50,17 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('CertFly')),
+      appBar: AppBar(
+        title: const Text('CertFly'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: ClipOval(
+              child: Image.asset('assets/images/mascot_avatar.png', width: 34, height: 34),
+            ),
+          ),
+        ],
+      ),
       body: FutureBuilder<_HomeData>(
         future: _future,
         builder: (context, snapshot) {
@@ -67,7 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.all(16),
               children: [
                 _ProfileHeader(me: data.me),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 for (final domain in data.domains) _DomainSection(domain: domain, onTopicCompleted: _reload, apiClient: widget.apiClient),
               ],
             ),
@@ -84,18 +95,26 @@ class _ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Card(
-      color: colorScheme.primaryContainer,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _StatChip(icon: Icons.bolt, label: '${me.totalXp} XP'),
-            _StatChip(icon: Icons.local_fire_department, label: '${me.currentStreak} dias'),
-          ],
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: const LinearGradient(
+          colors: [AppColors.purple, Color(0xFF4C1D95)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _StatChip(icon: Icons.bolt_rounded, iconColor: AppColors.green, label: '${me.totalXp} XP'),
+          _StatChip(
+            icon: Icons.local_fire_department_rounded,
+            iconColor: AppColors.amber,
+            label: '${me.currentStreak} dias',
+          ),
+        ],
       ),
     );
   }
@@ -103,17 +122,21 @@ class _ProfileHeader extends StatelessWidget {
 
 class _StatChip extends StatelessWidget {
   final IconData icon;
+  final Color iconColor;
   final String label;
-  const _StatChip({required this.icon, required this.label});
+  const _StatChip({required this.icon, required this.iconColor, required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: Theme.of(context).colorScheme.onPrimaryContainer),
+        Icon(icon, color: iconColor),
         const SizedBox(width: 6),
-        Text(label, style: Theme.of(context).textTheme.titleMedium),
+        Text(
+          label,
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: Colors.white),
+        ),
       ],
     );
   }
@@ -132,8 +155,16 @@ class _DomainSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 8, bottom: 4),
-          child: Text(domain.name, style: Theme.of(context).textTheme.titleMedium),
+          padding: const EdgeInsets.only(top: 8, bottom: 8),
+          child: Text(
+            domain.name.toUpperCase(),
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+              letterSpacing: 0.8,
+              color: AppColors.textDim,
+            ),
+          ),
         ),
         for (final topic in domain.topics)
           _TopicTile(topic: topic, apiClient: apiClient, onTopicCompleted: onTopicCompleted),
@@ -152,18 +183,8 @@ class _TopicTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: ListTile(
-        enabled: topic.unlocked,
-        leading: Icon(topic.unlocked ? Icons.school_outlined : Icons.lock_outline),
-        title: Text(topic.name),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 6),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(value: topic.masteryPct, minHeight: 6),
-          ),
-        ),
-        trailing: Text('${(topic.masteryPct * 100).round()}%'),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
         onTap: topic.unlocked
             ? () async {
                 await Navigator.of(context).push(
@@ -174,6 +195,62 @@ class _TopicTile extends StatelessWidget {
                 onTopicCompleted();
               }
             : null,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: topic.unlocked ? AppColors.purple.withValues(alpha: 0.2) : AppColors.surfaceHigh,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  topic.unlocked ? Icons.auto_stories_rounded : Icons.lock_rounded,
+                  color: topic.unlocked ? AppColors.purpleLight : AppColors.textDim,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      topic.name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        color: topic.unlocked ? AppColors.textPrimary : AppColors.textDim,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: topic.masteryPct,
+                        minHeight: 6,
+                        backgroundColor: AppColors.line,
+                        valueColor: const AlwaysStoppedAnimation(AppColors.purple),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                '${(topic.masteryPct * 100).round()}%',
+                style: const TextStyle(
+                  fontFeatures: [FontFeature.tabularFigures()],
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                  color: AppColors.green,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -192,8 +269,8 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.cloud_off, size: 48),
-            const SizedBox(height: 12),
+            Image.asset('assets/images/mascot_icon.png', width: 64, height: 64),
+            const SizedBox(height: 16),
             const Text('Não consegui falar com o backend.', textAlign: TextAlign.center),
             const SizedBox(height: 4),
             Text(error, style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.center),

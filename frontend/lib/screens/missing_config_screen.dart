@@ -15,7 +15,7 @@ class MissingConfigScreen extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.settings_suggest_outlined, size: 48, color: Theme.of(context).colorScheme.primary),
+              Image.asset('assets/images/mascot_icon.png', width: 56, height: 56),
               const SizedBox(height: 16),
               Text(
                 'Config de desenvolvimento ausente',
