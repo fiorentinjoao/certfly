@@ -4,6 +4,7 @@ e de query que testes unitários (que não tocam banco) não pegariam."""
 
 import uuid
 from datetime import date, datetime, timedelta, timezone
+from unittest.mock import patch
 
 from app.repository import attempts, catalog, lesson_sessions, srs_state, users
 from app.repository.orm_models import (
@@ -61,6 +62,35 @@ def test_add_xp_acumula(db_session):
     updated = users.add_xp(db_session, user_id, 3)
 
     assert updated.total_xp == 13
+
+
+def test_get_or_create_user_recupera_de_insercao_concorrente(db_session):
+    # O frontend dispara /me e /progress em paralelo (Future.wait) — as
+    # duas requisições podem ver "usuário não existe" antes de qualquer
+    # uma commitar o INSERT, e a segunda bate na UNIQUE constraint. Aqui
+    # forçamos essa janela: o usuário já foi criado de verdade, mas o
+    # SELECT desta chamada (mockado) ainda "não viu" isso — reproduz
+    # exatamente o IntegrityError que get_or_create_user precisa absorver.
+    user_id = uuid.uuid4()
+    users.get_or_create_user(db_session, user_id, "dev@example.com")
+
+    # Só a checagem inicial mente ("não existe"); a busca de recuperação
+    # dentro do except precisa continuar vendo o banco de verdade, ou o
+    # teste estaria mockando a própria recuperação que queremos validar.
+    real_get = type(db_session).get
+    calls = {"n": 0}
+
+    def lie_once(self, *args, **kwargs):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return None
+        return real_get(self, *args, **kwargs)
+
+    with patch.object(type(db_session), "get", lie_once):
+        row = users.get_or_create_user(db_session, user_id, "dev@example.com")
+
+    assert row.id == user_id
+    assert row.total_xp == 0
 
 
 def test_update_streak_persiste_streak_e_last_active_date(db_session):

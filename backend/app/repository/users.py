@@ -3,6 +3,7 @@
 import uuid
 from datetime import date
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models.entities import AppUser
@@ -21,12 +22,28 @@ def get_or_create_user(db: Session, user_id: uuid.UUID, email: str) -> AppUser:
     O Supabase Auth já validou a identidade — na primeira chamada
     autenticada de um usuário novo, criamos a linha correspondente aqui em
     vez de exigir um passo de "registro" separado no domínio da aplicação.
+
+    Sujeito a corrida: o cliente frequentemente dispara mais de uma
+    chamada autenticada em paralelo (ex: Home busca /me e /progress ao
+    mesmo tempo) — as duas podem ver "usuário não existe" e tentar
+    inserir. Em vez de impedir isso com lock, tratamos a 2ª inserção que
+    perde a corrida como sucesso: dá rollback e busca a linha que a
+    primeira já criou.
     """
     row = db.get(AppUserORM, user_id)
-    if row is None:
-        row = AppUserORM(id=user_id, email=email)
-        db.add(row)
+    if row is not None:
+        return mappers.app_user_to_entity(row)
+
+    row = AppUserORM(id=user_id, email=email)
+    db.add(row)
+    try:
         db.commit()
+    except IntegrityError:
+        db.rollback()
+        row = db.get(AppUserORM, user_id)
+        if row is None:
+            raise
+    else:
         db.refresh(row)
     return mappers.app_user_to_entity(row)
 
