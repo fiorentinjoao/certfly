@@ -15,6 +15,7 @@ venv/
 .env
 *.egg-info/
 .pytest_cache/
+*.db
 
 # Node (frontend provável)
 node_modules/
