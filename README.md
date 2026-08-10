@@ -1,6 +1,6 @@
 # CertFly
 
-> Duolingo para certificações técnicas — sessões diárias curtas, com repetição espaçada e domínio por tópico, para quem estuda para certificações (começando por Google Cloud).
+> Duolingo para certificações técnicas — sessões diárias curtas, com repetição espaçada e domínio por tópico, para quem estuda certificações de dados nas 3 principais clouds (Google Cloud, AWS, Azure).
 
 Side project solo. O backend (motor de regras + API) está funcional e testado ponta a ponta contra SQLite local; falta conteúdo real (questões), conectar a um Supabase de verdade e o frontend Flutter.
 
@@ -17,9 +17,11 @@ Side project solo. O backend (motor de regras + API) está funcional e testado p
 | Modelagem de domínio (entidades) | ✅ |
 | Motor do core loop (SRS + mastery + gate + XP/streak) | ✅ |
 | Repository (SQLAlchemy) + services + API FastAPI (5 endpoints) | ✅ |
-| Conteúdo real (questões de Google Cloud PDE) | ⏳ próximo passo |
+| Conteúdo real — GCP Professional Data Engineer | ⏳ próximo passo |
+| Conteúdo real — AWS Data Engineer – Associate | ⏳ não iniciado |
+| Conteúdo real — Azure Data Engineer Associate (DP-203) | ⏳ não iniciado |
 | Supabase real conectado (hoje roda em SQLite local) | ⏳ próximo passo |
-| Frontend Flutter | ⏳ não iniciado |
+| Frontend Flutter | ✅ telas do core loop implementadas (dev target Linux); protótipo visual das 10 telas completo |
 
 ## Contexto
 
@@ -72,9 +74,13 @@ backend/app/
 2. Modelagem de domínio (entidades) ✅
 3. System design (stack, schema, endpoints, deploy) ✅
 4. Motor completo + repository + services + API FastAPI ✅
-5. Escrever conteúdo real (questões de Google Cloud PDE) — próximo passo
-6. Conectar a um projeto Supabase real (hoje só SQLite local)
-7. Frontend Flutter
+5. Frontend Flutter — telas do core loop implementadas; protótipo visual completo (10 telas) ✅
+6. Escrever conteúdo real — GCP Professional Data Engineer — próximo passo
+7. Escrever conteúdo real — AWS Data Engineer – Associate
+8. Escrever conteúdo real — Azure Data Engineer Associate (DP-203)
+9. Conectar a um projeto Supabase real (hoje só SQLite local)
+
+**Nota (2026-08-10):** o MVP passou a cobrir 3 certificações (1 por cloud) em vez de só GCP — ver `docs/product-spec.md`. Isso adia o lançamento (mais conteúdo pra escrever) em troca de uma proposta de valor mais forte.
 
 ## Nota sobre origem deste documento
 

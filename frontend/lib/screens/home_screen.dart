@@ -4,19 +4,27 @@ import '../api/api_client.dart';
 import '../models/me.dart';
 import '../models/progress.dart';
 import '../theme.dart';
-import '../widgets/animated_progress_bar.dart';
 import '../widgets/app_page_route.dart';
-import '../widgets/fade_slide_in.dart';
+import '../widgets/domain_path.dart';
+import '../widgets/streak_hero.dart';
 import 'lesson_screen.dart';
 
+/// Threshold do gate de desbloqueio (RF-09, core-loop-srs.md) — usado só
+/// pra decidir qual nó ganha o destaque de "nó ativo" na trilha (o
+/// primeiro tópico desbloqueado ainda não dominado); não duplica a regra
+/// de negócio em si — o servidor já decide `unlocked`.
+const _gateThreshold = 0.8;
+
 /// GET /me + GET /certification/{id}/progress (RF-02) — trilha de
-/// domínios/tópicos com % de domínio e status de desbloqueio.
+/// domínios/tópicos em zigue-zague, com anel de mastery real por tópico.
 class HomeScreen extends StatefulWidget {
   final ApiClient apiClient;
   final String certificationId;
 
-  /// Null quando a sessão é via token de dev (scripts/seed_dev.py) — não
-  /// há do que "sair" nesse caminho, então o menu de logout nem aparece.
+  /// Null quando a sessão é via token de dev (scripts/seed_dev.py) — sem
+  /// sessão real pra encerrar (ver lib/auth/auth_gateway.dart). Repassado
+  /// pro MainShell construir a ProfileScreen; HomeScreen em si não usa
+  /// mais isso desde que o logout mudou pra aba Perfil.
   final VoidCallback? onLogout;
 
   const HomeScreen({
@@ -59,29 +67,40 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  /// Primeiro tópico desbloqueado ainda não dominado, varrendo todos os
+  /// domínios em ordem — esse é o nó que ganha destaque ("Continuar"/
+  /// "Começar") na trilha. Sem isso, ficaria ambíguo qual card mostrar
+  /// como "próximo passo" quando há vários tópicos desbloqueados.
+  String? _activeTopicId(List<DomainProgress> domains) {
+    for (final domain in domains) {
+      for (final topic in domain.topics) {
+        if (topic.unlocked && topic.masteryPct < _gateThreshold) return topic.id;
+      }
+    }
+    // Fallback: tudo dominado ou nada desbloqueado — usa o primeiro
+    // desbloqueado que existir, se houver.
+    for (final domain in domains) {
+      for (final topic in domain.topics) {
+        if (topic.unlocked) return topic.id;
+      }
+    }
+    return null;
+  }
+
+  void _openTopic(TopicProgress topic) {
+    Navigator.of(context)
+        .push(
+          appPageRoute(
+            LessonScreen(apiClient: widget.apiClient, topicId: topic.id, topicName: topic.name),
+          ),
+        )
+        .then((_) => _reload());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('CertFly'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: widget.onLogout == null
-                ? ClipOval(
-                    child: Image.asset('assets/images/mascot_avatar.png', width: 34, height: 34),
-                  )
-                : PopupMenuButton<void>(
-                    icon: ClipOval(
-                      child: Image.asset('assets/images/mascot_avatar.png', width: 34, height: 34),
-                    ),
-                    itemBuilder: (context) => [
-                      PopupMenuItem(onTap: widget.onLogout, child: const Text('Sair')),
-                    ],
-                  ),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('CertFly')),
       body: FutureBuilder<_HomeData>(
         future: _future,
         builder: (context, snapshot) {
@@ -89,27 +108,27 @@ class _HomeScreenState extends State<HomeScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return _ErrorState(error: snapshot.error.toString(), onRetry: _reload);
+            return _ErrorState(onRetry: _reload);
           }
 
           final data = snapshot.data!;
-          var topicIndex = 0;
+          final activeTopicId = _activeTopicId(data.domains);
+
           return RefreshIndicator(
             onRefresh: () async => _reload(),
             child: ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 18),
               children: [
-                FadeSlideIn(child: _ProfileHeader(me: data.me)),
-                const SizedBox(height: 20),
-                for (final domain in data.domains)
-                  _DomainSection(
+                StreakHero(currentStreak: data.me.currentStreak, totalXp: data.me.totalXp),
+                const SizedBox(height: 22),
+                for (final domain in data.domains) ...[
+                  DomainPathSection(
                     domain: domain,
-                    onTopicCompleted: _reload,
-                    apiClient: widget.apiClient,
-                    // cada tópico soma 1 ao índice global, pra escalonar a
-                    // entrada de toda a lista (não só dentro do domínio).
-                    startIndex: (topicIndex += domain.topics.length) - domain.topics.length,
+                    activeTopicId: activeTopicId,
+                    onTapTopic: _openTopic,
                   ),
+                  const SizedBox(height: 22),
+                ],
               ],
             ),
           );
@@ -119,199 +138,41 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _ProfileHeader extends StatelessWidget {
-  final Me me;
-  const _ProfileHeader({required this.me});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        gradient: const LinearGradient(
-          colors: [AppColors.purple, Color(0xFF4C1D95)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _StatChip(icon: Icons.bolt_rounded, iconColor: AppColors.green, label: '${me.totalXp} XP'),
-          _StatChip(
-            icon: Icons.local_fire_department_rounded,
-            iconColor: AppColors.amber,
-            label: '${me.currentStreak} dias',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatChip extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String label;
-  const _StatChip({required this.icon, required this.iconColor, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: iconColor),
-        const SizedBox(width: 6),
-        Text(
-          label,
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: Colors.white),
-        ),
-      ],
-    );
-  }
-}
-
-class _DomainSection extends StatelessWidget {
-  final DomainProgress domain;
-  final VoidCallback onTopicCompleted;
-  final ApiClient apiClient;
-  final int startIndex;
-
-  const _DomainSection({
-    required this.domain,
-    required this.onTopicCompleted,
-    required this.apiClient,
-    required this.startIndex,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 8, bottom: 8),
-          child: Text(
-            domain.name.toUpperCase(),
-            style: const TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 12,
-              letterSpacing: 0.8,
-              color: AppColors.textDim,
-            ),
-          ),
-        ),
-        for (final (i, topic) in domain.topics.indexed)
-          FadeSlideIn(
-            delay: Duration(milliseconds: 60 * (startIndex + i)),
-            child: _TopicTile(topic: topic, apiClient: apiClient, onTopicCompleted: onTopicCompleted),
-          ),
-      ],
-    );
-  }
-}
-
-class _TopicTile extends StatelessWidget {
-  final TopicProgress topic;
-  final ApiClient apiClient;
-  final VoidCallback onTopicCompleted;
-
-  const _TopicTile({required this.topic, required this.apiClient, required this.onTopicCompleted});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: topic.unlocked
-            ? () async {
-                await Navigator.of(context).push(
-                  appPageRoute(
-                    LessonScreen(apiClient: apiClient, topicId: topic.id, topicName: topic.name),
-                  ),
-                );
-                onTopicCompleted();
-              }
-            : null,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: topic.unlocked ? AppColors.purple.withValues(alpha: 0.2) : AppColors.surfaceHigh,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  topic.unlocked ? Icons.auto_stories_rounded : Icons.lock_rounded,
-                  color: topic.unlocked ? AppColors.purpleLight : AppColors.textDim,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      topic.name,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                        color: topic.unlocked ? AppColors.textPrimary : AppColors.textDim,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    AnimatedProgressBar(
-                      value: topic.masteryPct,
-                      minHeight: 6,
-                      backgroundColor: AppColors.line,
-                      valueColor: AppColors.purple,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                '${(topic.masteryPct * 100).round()}%',
-                style: const TextStyle(
-                  fontFeatures: [FontFeature.tabularFigures()],
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                  color: AppColors.green,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _ErrorState extends StatelessWidget {
-  final String error;
   final VoidCallback onRetry;
-  const _ErrorState({required this.error, required this.onRetry});
+
+  const _ErrorState({required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.symmetric(horizontal: 32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset('assets/images/mascot_icon.png', width: 64, height: 64),
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: AppColors.red.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.error_outline_rounded, size: 26, color: AppColors.red),
+            ),
+            const SizedBox(height: 14),
+            const Text(
+              'Não consegui carregar seus dados',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: AppColors.textPrimary),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Verifique sua conexão e tente de novo.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textDim),
+            ),
             const SizedBox(height: 16),
-            const Text('Não consegui falar com o backend.', textAlign: TextAlign.center),
-            const SizedBox(height: 4),
-            Text(error, style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            FilledButton(onPressed: onRetry, child: const Text('Tentar de novo')),
+            FilledButton(onPressed: onRetry, child: const Text('Tentar novamente')),
           ],
         ),
       ),

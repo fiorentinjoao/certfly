@@ -34,8 +34,8 @@ class WelcomeScreen extends StatelessWidget {
                     child: const Text(
                       'CertFly',
                       style: TextStyle(
-                        fontFamily: 'Fredoka',
-                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Nunito',
+                        fontWeight: FontWeight.w900,
                         fontSize: 40,
                         color: AppColors.textPrimary,
                         height: 1.1,
