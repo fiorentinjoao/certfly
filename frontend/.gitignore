@@ -24,8 +24,11 @@ migrate_working_dir/
 #.vscode/
 
 # Config de dev local — gerado por scripts/seed_dev.py, contém um JWT
-# (mesmo sendo de teste, não deve ser commitado).
+# (mesmo sendo de teste, não deve ser commitado). login-test.json é a
+# variante sem devToken (força o fluxo de login real) usada pra testar
+# manualmente — também é config local, não de repositório.
 dev*.json
+login-test.json
 
 # Flutter/Dart/Pub related
 **/doc/api/
