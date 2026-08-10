@@ -22,17 +22,40 @@ Ver detalhes em [market-research.md](market-research.md). Resumo: concorrentes e
 
 - **Certificações do MVP** (1 por cloud, todas focadas em engenharia de dados — perfil do usuário-alvo):
   1. **Google Cloud** — Professional Data Engineer
-  2. **AWS** — AWS Certified Data Engineer – Associate
-  3. **Azure** — Microsoft Certified: Azure Data Engineer Associate (DP-203)
-- **Domínios cobertos por certificação (MVP)**: por ora, escopo raso em todas as 3 — os 2 domínios de maior peso na prova de cada certificação (análogo ao que foi feito pra GCP: Designing/Processing + Storing). Detalhamento por certificação (AWS/Azure) fica para quando o conteúdo de fato começar a ser escrito.
-- **Domínios do GCP PDE** (já detalhado, mantido como referência):
-  1. Designing Data Processing Systems (~30%)
-  2. Ingerindo e Processando Dados — batch + streaming (Dataflow, Apache Beam, Dataproc, Cloud Data Fusion, Pub/Sub)
-  3. Armazenando Dados (Storing) — BigQuery, BigLake, Dataplex, AlloyDB, Bigtable, Spanner, Cloud SQL, Firestore
-  4. Ensuring Solution Quality (~15%) — validação, qualidade, confiabilidade de dados
-  5. Managing Data Security and Compliance (~10%) — segurança e conformidade regulatória
+  2. **AWS** — AWS Certified Data Engineer – Associate (DEA-C01)
+  3. **Azure** — Microsoft Certified: Fabric Data Engineer Associate (DP-700)
 
-  Nota: "Building/Operationalizing" + "Ensuring Solution Quality" juntos respondem por ~60% do conteúdo da prova — o peso real está mais em "construir e operar" do que em "definir conceito". Domínios equivalentes de AWS Data Engineer – Associate e Azure DP-203 ainda precisam ser mapeados (próximo passo, junto com a escrita do conteúdo).
+  **Nota (2026-08-10):** a certificação Azure originalmente escolhida, **DP-203 (Azure Data
+  Engineer Associate), foi aposentada pela Microsoft em março/2025** — não existe mais
+  como prova ativa. A substituta oficial é a **DP-700**, baseada em Microsoft Fabric (não
+  mais Synapse/Data Factory clássico). Decisão do dono: seguir com DP-700.
+
+- **Decisão revisada (2026-08-10, escopo de conteúdo):** o MVP passa a cobrir o **blueprint
+  oficial completo** de cada certificação (todos os domínios, não só os 2 de maior peso),
+  escrito **em paralelo nas 3 clouds** — não mais um escopo raso de 2 domínios por
+  certificação. Trade-off aceito pelo dono: bem mais volume de conteúdo antes do
+  lançamento, em troca de cobertura real desde o dia 1.
+
+- **Domínios do GCP PDE** (guia oficial v4.2, cloud.google.com/certification/guides/data-engineer):
+  1. Designing data processing systems (~22%)
+  2. Ingesting and processing the data (~25%)
+  3. Storing the data (~20%)
+  4. Preparing and using data for analysis (~15%)
+  5. Maintaining and automating data workloads (~18%)
+
+- **Domínios do AWS Data Engineer – Associate (DEA-C01)** (guia oficial AWS):
+  1. Data Ingestion and Transformation (34%)
+  2. Data Store Management (26%)
+  3. Data Operations and Support (22%)
+  4. Data Security and Governance (18%)
+
+- **Domínios do Azure DP-700 (Fabric Data Engineer Associate)** (guia oficial Microsoft Learn):
+  1. Implement and manage an analytics solution (30-35%)
+  2. Ingest and transform data (30-35%)
+  3. Monitor and optimize an analytics solution (30-35%)
+
+  Ver árvore completa de domínio → tópico (com os itens de cada guia oficial) e o plano
+  de volume/ritmo de escrita de perguntas em [content-plan.md](content-plan.md).
 
 ## Core loop do MVP
 
@@ -50,7 +73,7 @@ Ver detalhes em [market-research.md](market-research.md). Resumo: concorrentes e
 - Pagamento / monetização
 - App mobile nativo
 
-~~Multi-certificação~~ — **removido desta lista em 2026-08-10**: passou a fazer parte do MVP (3 certificações, 1 por cloud — ver "Conteúdo do MVP" acima). A arquitetura já era agnóstica de provedor desde o início (ver architecture-decisions.md); o que muda agora é que o conteúdo de AWS/Azure entra na Fase 1, não só o GCP.
+~~Multi-certificação~~ — **removido desta lista em 2026-08-10**: passou a fazer parte do MVP (3 certificações, 1 por cloud, blueprint completo — ver "Conteúdo do MVP" acima). A arquitetura já era agnóstica de provedor desde o início (ver architecture-decisions.md).
 
 ## Monetização
 
@@ -64,6 +87,6 @@ Nenhuma no MVP. Ideia inicial para depois: freemium (grátis = X perguntas/dia +
 
 - Não travar a plataforma em "certificações de dados" como regra — dados é só o ponto de partida por ser onde o dono tem profundidade para gerar conteúdo de qualidade rápido. Arquitetura desde o início é agnóstica de provedor/domínio.
 - Sem cobrança no MVP.
-- Domínios do MVP escolhidos junto com o dono: Designing + Storing (GCP; equivalentes AWS/Azure a mapear).
+- Domínios do MVP: blueprint oficial completo de cada certificação (ver "Conteúdo do MVP" acima), decisão revisada em 2026-08-10.
 - Métrica de sucesso escolhida: retenção via streak de 7+ dias.
-- **2026-08-10**: MVP passa a lançar com 3 certificações (GCP PDE + AWS Data Engineer – Associate + Azure DP-203) em vez de só GCP. Aumenta o volume de conteúdo a escrever antes do lançamento — trade-off aceito pelo dono em troca de uma proposta de valor mais defensável ("cobre as 3 clouds", não só uma).
+- **2026-08-10**: MVP passa a lançar com 3 certificações (GCP PDE + AWS Data Engineer – Associate + Azure DP-700, substituindo a DP-203 aposentada) em vez de só GCP. Aumenta o volume de conteúdo a escrever antes do lançamento — trade-off aceito pelo dono em troca de uma proposta de valor mais defensável ("cobre as 3 clouds", não só uma).

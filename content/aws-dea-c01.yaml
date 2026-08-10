@@ -1,0 +1,327 @@
+# Conteúdo (domínios/tópicos/perguntas) do AWS — Certified Data Engineer –
+# Associate (DEA-C01). Estrutura de domínios segue o guia oficial v1.0
+# (https://d1.awsstatic.com/training-and-certification/docs-data-engineer-associate/AWS-Certified-Data-Engineer-Associate_Exam-Guide.pdf).
+#
+# Ver docs/content-plan.md pro plano de volume/ritmo e docs/product-spec.md
+# pra decisão de escopo (blueprint completo, 2026-08-10).
+#
+# Perguntas são escritas do zero pela equipe do CertFly — nunca copiadas de
+# bancos de questões reais (ver aviso legal em docs/content-plan.md).
+
+provider:
+  name: AWS
+  slug: aws
+
+certification:
+  name: AWS Certified Data Engineer – Associate
+  slug: aws-dea-c01
+
+domains:
+  - name: Data Ingestion and Transformation
+    slug: data-ingestion-transformation
+    weight_pct: 34
+    order: 1
+    topics:
+      - name: Ingestão de dados
+        slug: ingestao-dados
+        order: 1
+        questions:
+          - prompt: >-
+              Uma equipe precisa ingerir dados de cliques de um site em
+              tempo real, com múltiplos consumidores processando o mesmo
+              stream de formas diferentes (um pra analytics, outro pra
+              detecção de fraude). Qual serviço é o mais indicado?
+            choices:
+              - text: Amazon Kinesis Data Streams
+                correct: true
+                explanation: >-
+                  Kinesis Data Streams permite múltiplos consumidores
+                  lendo o mesmo stream de forma independente (fan-out),
+                  exatamente o padrão descrito.
+              - text: Amazon SQS (fila padrão)
+                correct: false
+                explanation: >-
+                  Uma fila SQS padrão entrega cada mensagem a um único
+                  consumidor que a processa e remove — não é o modelo de
+                  múltiplos consumidores lendo o mesmo stream.
+              - text: AWS Database Migration Service (DMS)
+                correct: false
+                explanation: >-
+                  DMS é voltado a migração/replicação de bancos de dados,
+                  não a ingestão de eventos de clique em tempo real.
+              - text: Amazon S3 com upload direto
+                correct: false
+                explanation: >-
+                  S3 é armazenamento de objetos — não é um serviço de
+                  streaming com múltiplos consumidores lendo o mesmo fluxo
+                  de eventos.
+
+          - prompt: >-
+              Qual é a forma correta de reagir automaticamente à chegada de
+              um novo arquivo em um bucket S3, disparando um pipeline de
+              processamento sem precisar de um job agendado verificando o
+              bucket periodicamente?
+            choices:
+              - text: Amazon S3 Event Notifications (para EventBridge/Lambda/SQS)
+                correct: true
+                explanation: >-
+                  S3 Event Notifications dispara automaticamente quando um
+                  objeto é criado/alterado, permitindo acionar Lambda,
+                  EventBridge ou SQS sem polling.
+              - text: Um job agendado no EventBridge rodando a cada minuto
+                correct: false
+                explanation: >-
+                  Isso é polling — funciona, mas desperdiça execuções e
+                  adiciona latência, ao contrário de uma notificação
+                  orientada a evento.
+              - text: Habilitar S3 Versioning no bucket
+                correct: false
+                explanation: >-
+                  Versionamento mantém histórico de versões de objetos; não
+                  tem relação com disparar processamento na chegada de
+                  arquivo novo.
+              - text: Configurar uma política de IAM mais permissiva
+                correct: false
+                explanation: >-
+                  Política de IAM é sobre permissão de acesso, não sobre
+                  reagir a eventos de chegada de dado.
+
+      - name: Transformação e processamento
+        slug: transformacao-processamento
+        order: 2
+        questions:
+          - prompt: >-
+              Uma equipe precisa transformar dados de .csv para Apache
+              Parquet como parte de um ETL serverless, sem gerenciar
+              infraestrutura de cluster. Qual serviço é o mais direto pra
+              isso?
+            choices:
+              - text: AWS Glue
+                correct: true
+                explanation: >-
+                  AWS Glue é o serviço de ETL serverless da AWS, com
+                  suporte nativo à conversão entre formatos como CSV e
+                  Parquet, sem gerenciar cluster.
+              - text: Amazon EC2 com script customizado
+                correct: false
+                explanation: >-
+                  Funcionaria, mas exige gerenciar a instância/cluster —
+                  o oposto do requisito "sem gerenciar infraestrutura".
+              - text: Amazon RDS
+                correct: false
+                explanation: >-
+                  RDS é banco relacional gerenciado — não é uma ferramenta
+                  de ETL/transformação de arquivos.
+              - text: AWS Certificate Manager
+                correct: false
+                explanation: >-
+                  Serviço de gestão de certificados TLS — sem nenhuma
+                  relação com transformação de dados.
+
+      - name: Orquestração de pipelines
+        slug: orquestracao-pipelines
+        order: 3
+        questions:
+          - prompt: >-
+              Qual serviço da AWS é a opção gerenciada para rodar DAGs do
+              Apache Airflow, orquestrando dependências entre múltiplos
+              jobs de um pipeline de dados?
+            choices:
+              - text: Amazon Managed Workflows for Apache Airflow (MWAA)
+                correct: true
+                explanation: >-
+                  MWAA é o Airflow gerenciado da AWS — criado exatamente
+                  pra rodar DAGs de orquestração sem gerenciar a
+                  infraestrutura do Airflow por conta própria.
+              - text: AWS Step Functions apenas
+                correct: false
+                explanation: >-
+                  Step Functions também orquestra workflows (com máquinas
+                  de estado), mas não é a versão gerenciada do Airflow —
+                  são ferramentas distintas, e o enunciado pede
+                  especificamente por DAGs do Airflow.
+              - text: Amazon SNS
+                correct: false
+                explanation: >-
+                  SNS é um serviço de notificação pub/sub, não uma
+                  ferramenta de orquestração de pipeline.
+              - text: AWS CloudFormation
+                correct: false
+                explanation: >-
+                  CloudFormation é infraestrutura como código (provisiona
+                  recursos) — não orquestra execução de pipelines de dados.
+
+      - name: Conceitos de programação (CI/CD, IaC, SQL)
+        slug: conceitos-programacao
+        order: 4
+        questions:
+          - prompt: >-
+              Qual serviço permite definir a infraestrutura de um pipeline
+              de dados (buckets, funções Lambda, tabelas) como código,
+              versionado e reproduzível, seguindo o padrão IaC da AWS?
+            choices:
+              - text: AWS CloudFormation
+                correct: true
+                explanation: >-
+                  CloudFormation é o serviço nativo de infraestrutura como
+                  código da AWS, permitindo declarar recursos em templates
+                  versionáveis e reproduzíveis.
+              - text: AWS Glue DataBrew
+                correct: false
+                explanation: >-
+                  DataBrew é uma ferramenta de preparação/limpeza visual de
+                  dados, sem relação com provisionamento de infraestrutura.
+              - text: Amazon Athena
+                correct: false
+                explanation: >-
+                  Athena é um serviço de consulta SQL sobre dados no S3 —
+                  não é uma ferramenta de infraestrutura como código.
+              - text: AWS X-Ray
+                correct: false
+                explanation: >-
+                  X-Ray é uma ferramenta de tracing/observabilidade de
+                  aplicações, sem relação com IaC.
+
+  - name: Data Store Management
+    slug: data-store-management
+    weight_pct: 26
+    order: 2
+    topics:
+      - name: Escolha de data store
+        slug: escolha-data-store
+        order: 1
+        questions:
+          - prompt: >-
+              Uma aplicação precisa de leituras/escritas de itens individuais
+              com latência de milissegundos em altíssima escala, sem
+              necessidade de joins complexos. Qual serviço é o mais
+              indicado?
+            choices:
+              - text: Amazon DynamoDB
+                correct: true
+                explanation: >-
+                  DynamoDB é o banco NoSQL gerenciado da AWS voltado
+                  exatamente a esse padrão: leitura/escrita de itens
+                  individuais com latência de milissegundos em qualquer
+                  escala.
+              - text: Amazon Redshift
+                correct: false
+                explanation: >-
+                  Redshift é um data warehouse voltado a consultas
+                  analíticas sobre grandes volumes — não otimizado pra
+                  latência de milissegundos em operações de item único.
+              - text: Amazon EMR
+                correct: false
+                explanation: >-
+                  EMR é uma plataforma de processamento distribuído (Spark/
+                  Hadoop) — não é um data store de baixa latência para
+                  itens individuais.
+              - text: AWS Glue Data Catalog
+                correct: false
+                explanation: >-
+                  O Glue Data Catalog é um repositório de metadados
+                  (schemas), não um data store para leitura/escrita de
+                  dados de aplicação.
+
+      - name: Catalogação de dados
+        slug: catalogacao-dados
+        order: 2
+        questions:
+          - prompt: >-
+              Qual serviço da AWS varre automaticamente dados no S3 para
+              inferir o schema e popular um catálogo de dados consultável
+              por outros serviços como Athena?
+            choices:
+              - text: AWS Glue Crawler
+                correct: true
+                explanation: >-
+                  O Glue Crawler varre a origem de dados (ex: S3),
+                  identifica o schema automaticamente e popula o AWS Glue
+                  Data Catalog, que fica disponível para Athena e outros
+                  serviços.
+              - text: Amazon Macie
+                correct: false
+                explanation: >-
+                  Macie é focado em descoberta de dados sensíveis (PII)
+                  para segurança, não em inferir schema para catalogação.
+              - text: AWS CloudTrail
+                correct: false
+                explanation: >-
+                  CloudTrail registra chamadas de API para auditoria — sem
+                  relação com inferência de schema ou catalogação de
+                  dados.
+              - text: Amazon Kinesis Data Firehose
+                correct: false
+                explanation: >-
+                  Firehose entrega dados de streaming a destinos como S3
+                  ou Redshift — não varre dados existentes para catalogar
+                  schema.
+
+      - name: Ciclo de vida dos dados
+        slug: ciclo-vida-dados
+        order: 3
+        questions:
+          - prompt: >-
+              Como reduzir automaticamente o custo de armazenamento de
+              objetos no S3 que são acessados com frequência decrescente ao
+              longo do tempo, movendo-os para classes de armazenamento mais
+              baratas conforme envelhecem?
+            choices:
+              - text: Configurar uma política de S3 Lifecycle
+                correct: true
+                explanation: >-
+                  S3 Lifecycle permite definir regras automáticas de
+                  transição entre classes de armazenamento (ex: Standard →
+                  Infrequent Access → Glacier) baseadas na idade do objeto.
+              - text: Habilitar S3 Versioning
+                correct: false
+                explanation: >-
+                  Versionamento mantém múltiplas versões de um objeto — não
+                  move dados entre classes de armazenamento por idade.
+              - text: Aumentar o número de partições da tabela
+                correct: false
+                explanation: >-
+                  Particionamento organiza dados para consultas mais
+                  eficientes, mas não gerencia custo de armazenamento por
+                  ciclo de vida.
+              - text: Usar Amazon CloudFront na frente do bucket
+                correct: false
+                explanation: >-
+                  CloudFront é uma CDN para distribuição/cache de conteúdo,
+                  não uma ferramenta de gestão de ciclo de vida de
+                  armazenamento.
+
+      - name: Modelagem e evolução de schema
+        slug: modelagem-evolucao-schema
+        order: 4
+        questions:
+          - prompt: >-
+              Ao migrar um banco relacional on-premises para a AWS com
+              possíveis diferenças de dialeto SQL entre a origem e o
+              destino, qual ferramenta ajuda a converter automaticamente o
+              schema de origem para o formato compatível com o destino?
+            choices:
+              - text: AWS Schema Conversion Tool (AWS SCT)
+                correct: true
+                explanation: >-
+                  O AWS SCT é feito exatamente pra isso: converte schemas
+                  de bancos de dados entre diferentes engines/dialetos como
+                  parte de um projeto de migração.
+              - text: AWS DMS sozinho, sem SCT
+                correct: false
+                explanation: >-
+                  O DMS replica os dados em si, mas a conversão de schema
+                  entre dialetos diferentes é o papel específico do SCT —
+                  eles são tipicamente usados em conjunto quando o schema
+                  também precisa mudar.
+              - text: Amazon SageMaker Data Wrangler
+                correct: false
+                explanation: >-
+                  Data Wrangler é voltado à preparação de dados para
+                  machine learning, não à conversão de schema entre bancos
+                  relacionais.
+              - text: AWS Config
+                correct: false
+                explanation: >-
+                  AWS Config audita configuração de recursos da conta AWS
+                  — sem relação com conversão de schema de banco de dados.
