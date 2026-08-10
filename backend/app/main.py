@@ -7,7 +7,7 @@ com o venv ativado).
 from fastapi import FastAPI
 
 from app.repository.db import Base, engine
-from app.routers import answer, lesson, lesson_session, me, progress
+from app.routers import answer, certifications, lesson, lesson_session, me, progress
 
 app = FastAPI(title="CertFly API", version="0.1.0")
 
@@ -18,6 +18,7 @@ Base.metadata.create_all(bind=engine)
 
 app.include_router(me.router)
 app.include_router(progress.router)
+app.include_router(certifications.router)
 app.include_router(lesson.router)
 app.include_router(answer.router)
 app.include_router(lesson_session.router)

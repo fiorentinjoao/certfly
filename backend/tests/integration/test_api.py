@@ -32,7 +32,9 @@ def client():
     # padrão de SQLite em memória (por thread) faria essa thread enxergar
     # um banco vazio, diferente do que a fixture acabou de popular.
     engine = create_engine(
-        "sqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
     )
     Base.metadata.create_all(engine)
     session_local = sessionmaker(bind=engine, autocommit=False, autoflush=False)
@@ -62,15 +64,31 @@ def _seed_topic_with_question(db):
         id=uuid.uuid4(), provider_id=provider.id, name="PDE", slug="pde"
     )
     domain = DomainORM(
-        id=uuid.uuid4(), certification_id=certification.id, name="Storing", slug="storing", order=1
+        id=uuid.uuid4(),
+        certification_id=certification.id,
+        name="Storing",
+        slug="storing",
+        order=1,
     )
-    topic = TopicORM(id=uuid.uuid4(), domain_id=domain.id, name="BigQuery", slug="bigquery", order=1)
-    question = QuestionORM(id=uuid.uuid4(), topic_id=topic.id, prompt="Pergunta?", status="active")
+    topic = TopicORM(
+        id=uuid.uuid4(), domain_id=domain.id, name="BigQuery", slug="bigquery", order=1
+    )
+    question = QuestionORM(
+        id=uuid.uuid4(), topic_id=topic.id, prompt="Pergunta?", status="active"
+    )
     correct = ChoiceORM(
-        id=uuid.uuid4(), question_id=question.id, text="Certa", is_correct=True, explanation="Porque sim"
+        id=uuid.uuid4(),
+        question_id=question.id,
+        text="Certa",
+        is_correct=True,
+        explanation="Porque sim",
     )
     wrong = ChoiceORM(
-        id=uuid.uuid4(), question_id=question.id, text="Errada", is_correct=False, explanation="Porque não"
+        id=uuid.uuid4(),
+        question_id=question.id,
+        text="Errada",
+        is_correct=False,
+        explanation="Porque não",
     )
     db.add_all([provider, certification, domain, topic, question, correct, wrong])
     db.commit()
@@ -101,7 +119,9 @@ def test_me_cria_usuario_na_primeira_chamada(client):
 
 
 def test_fluxo_completo_de_uma_licao(client):
-    certification, topic, question, correct_choice = _seed_topic_with_question(client._db_session)
+    certification, topic, question, correct_choice = _seed_topic_with_question(
+        client._db_session
+    )
 
     # 1. progresso: tópico 1 do domínio 1 já vem destravado
     progress_response = client.get(f"/certification/{certification.id}/progress")
@@ -140,3 +160,50 @@ def test_fluxo_completo_de_uma_licao(client):
     me = me_response.json()
     assert me["total_xp"] == 10
     assert me["current_streak"] == 1
+
+
+def test_get_certifications_sem_token_retorna_401():
+    with TestClient(app) as client:
+        response = client.get("/certifications")
+    assert response.status_code == 401
+
+
+def test_get_certifications_lista_ativa_com_mastery_geral(client):
+    certification, topic, question, correct_choice = _seed_topic_with_question(
+        client._db_session
+    )
+
+    # sem nenhuma resposta ainda — mastery geral começa em 0%
+    response = client.get("/certifications")
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["id"] == str(certification.id)
+    assert body[0]["provider_name"] == "Google Cloud"
+    assert body[0]["provider_slug"] == "gcp"
+    assert body[0]["overall_mastery_pct"] == 0.0
+
+    # responder a única questão do único tópico — mastery geral sobe
+    client.post(
+        f"/question/{question.id}/answer", json={"choice_id": str(correct_choice.id)}
+    )
+    response = client.get("/certifications")
+    assert response.json()[0]["overall_mastery_pct"] > 0.0
+
+
+def test_get_certifications_inativa_nao_aparece(client):
+    db = client._db_session
+    provider = ProviderORM(id=uuid.uuid4(), name="AWS", slug="aws")
+    inactive_cert = CertificationORM(
+        id=uuid.uuid4(),
+        provider_id=provider.id,
+        name="Inativa",
+        slug="inativa",
+        active=False,
+    )
+    db.add_all([provider, inactive_cert])
+    db.commit()
+
+    response = client.get("/certifications")
+    assert response.status_code == 200
+    assert all(c["slug"] != "inativa" for c in response.json())

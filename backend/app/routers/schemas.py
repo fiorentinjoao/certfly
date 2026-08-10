@@ -78,3 +78,15 @@ class LessonSummaryResponse(BaseModel):
     current_streak: int
     mastery_pct: float
     topic_unlocked: bool
+
+
+class CertificationOverviewResponse(BaseModel):
+    """GET /certifications — item da lista de certificações disponíveis,
+    com a % de domínio geral do usuário (média entre todos os tópicos)."""
+
+    id: uuid.UUID
+    name: str
+    slug: str
+    provider_name: str
+    provider_slug: str
+    overall_mastery_pct: float

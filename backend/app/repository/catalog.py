@@ -9,7 +9,49 @@ from sqlalchemy.orm import Session
 
 from app.models import entities
 from app.repository import mappers
-from app.repository.orm_models import ChoiceORM, DomainORM, QuestionORM, TopicORM
+from app.repository.orm_models import (
+    ChoiceORM,
+    CertificationORM,
+    DomainORM,
+    ProviderORM,
+    QuestionORM,
+    TopicORM,
+)
+
+
+def get_active_certifications(
+    db: Session,
+) -> list[tuple[entities.Certification, entities.Provider]]:
+    """Certificações ativas + seu provedor, ordenadas por provedor então
+    nome — base do endpoint GET /certifications (RF-02 estendido pra
+    multi-certificação, ver docs/product-spec.md, decisão de 2026-08-10)."""
+    rows = db.execute(
+        select(CertificationORM, ProviderORM)
+        .join(ProviderORM, CertificationORM.provider_id == ProviderORM.id)
+        .where(CertificationORM.active.is_(True))
+        .order_by(ProviderORM.name, CertificationORM.name)
+    ).all()
+    return [
+        (
+            mappers.certification_to_entity(cert_row),
+            mappers.provider_to_entity(provider_row),
+        )
+        for cert_row, provider_row in rows
+    ]
+
+
+def get_topic_ids_for_certification(
+    db: Session, certification_id: uuid.UUID
+) -> list[uuid.UUID]:
+    """Todos os `topic_id` de uma certificação, direto (sem passar pelos
+    domínios) — usado pra calcular a % de domínio geral da certificação."""
+    return list(
+        db.scalars(
+            select(TopicORM.id)
+            .join(DomainORM, TopicORM.domain_id == DomainORM.id)
+            .where(DomainORM.certification_id == certification_id)
+        ).all()
+    )
 
 
 def get_domains_with_topics(
@@ -25,7 +67,9 @@ def get_domains_with_topics(
     result = []
     for domain_row in domain_rows:
         topic_rows = db.scalars(
-            select(TopicORM).where(TopicORM.domain_id == domain_row.id).order_by(TopicORM.order)
+            select(TopicORM)
+            .where(TopicORM.domain_id == domain_row.id)
+            .order_by(TopicORM.order)
         ).all()
         result.append(
             (
@@ -61,7 +105,9 @@ def get_questions_with_choices(
     if not question_ids:
         return []
 
-    question_rows = db.scalars(select(QuestionORM).where(QuestionORM.id.in_(question_ids))).all()
+    question_rows = db.scalars(
+        select(QuestionORM).where(QuestionORM.id.in_(question_ids))
+    ).all()
     questions_by_id = {row.id: row for row in question_rows}
 
     result = []
