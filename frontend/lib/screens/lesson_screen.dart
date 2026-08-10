@@ -4,6 +4,9 @@ import '../api/api_client.dart';
 import '../models/answer.dart';
 import '../models/lesson.dart';
 import '../theme.dart';
+import '../widgets/animated_progress_bar.dart';
+import '../widgets/app_page_route.dart';
+import '../widgets/fade_slide_in.dart';
 import 'lesson_summary_screen.dart';
 
 /// POST /topic/{id}/lesson (RF-03) + POST /question/{id}/answer (RF-04,
@@ -66,9 +69,7 @@ class _LessonScreenState extends State<LessonScreen> {
     setState(() => _submitting = true);
     final summary = await widget.apiClient.completeLessonSession(lesson.sessionId);
     if (!mounted) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => LessonSummaryScreen(summary: summary)),
-    );
+    await Navigator.of(context).push(appPageRoute(LessonSummaryScreen(summary: summary)));
     if (!mounted) return;
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
@@ -98,35 +99,50 @@ class _LessonScreenState extends State<LessonScreen> {
 
             return Column(
               children: [
-                LinearProgressIndicator(
+                AnimatedProgressBar(
                   value: (_currentIndex + (_currentAnswer != null ? 1 : 0)) / lesson.questions.length,
+                  minHeight: 4,
+                  backgroundColor: AppColors.line,
+                  valueColor: AppColors.purple,
                 ),
                 Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      Text(
-                        'QUESTÃO ${_currentIndex + 1} DE ${lesson.questions.length}',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.labelLarge?.copyWith(letterSpacing: 0.6, fontSize: 12),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(question.prompt, style: Theme.of(context).textTheme.titleLarge),
-                      const SizedBox(height: 20),
-                      for (final choice in question.choices)
-                        _ChoiceCard(
-                          choice: choice,
-                          selected: choice.id == _selectedChoiceId,
-                          answer: _currentAnswer,
-                          enabled: _currentAnswer == null && !_submitting,
-                          onTap: () => _submitAnswer(lesson.sessionId, question, choice.id),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 260),
+                    child: ListView(
+                      // key por questão: força o AnimatedSwitcher a tratar
+                      // cada questão como um widget novo, disparando o
+                      // crossfade ao avançar em vez de atualizar in-place.
+                      key: ValueKey(question.id),
+                      padding: const EdgeInsets.all(16),
+                      children: [
+                        Text(
+                          'QUESTÃO ${_currentIndex + 1} DE ${lesson.questions.length}',
+                          style: Theme.of(
+                            context,
+                          ).textTheme.labelLarge?.copyWith(letterSpacing: 0.6, fontSize: 12),
                         ),
-                      if (_currentAnswer != null) ...[
                         const SizedBox(height: 8),
-                        _XpBadge(xpEarned: _currentAnswer!.xpEarned, isCorrect: _currentAnswer!.isCorrect),
+                        Text(question.prompt, style: Theme.of(context).textTheme.titleLarge),
+                        const SizedBox(height: 20),
+                        for (final choice in question.choices)
+                          _ChoiceCard(
+                            choice: choice,
+                            selected: choice.id == _selectedChoiceId,
+                            answer: _currentAnswer,
+                            enabled: _currentAnswer == null && !_submitting,
+                            onTap: () => _submitAnswer(lesson.sessionId, question, choice.id),
+                          ),
+                        if (_currentAnswer != null) ...[
+                          const SizedBox(height: 8),
+                          FadeSlideIn(
+                            child: _XpBadge(
+                              xpEarned: _currentAnswer!.xpEarned,
+                              isCorrect: _currentAnswer!.isCorrect,
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
                 if (_currentAnswer != null)
@@ -173,8 +189,8 @@ class _ChoiceCard extends StatelessWidget {
       }
     }
 
-    Color? borderColor;
-    Color? tintColor;
+    Color borderColor = Colors.transparent;
+    Color tintColor = AppColors.surface;
     IconData? trailingIcon;
     if (explained != null) {
       if (explained.isCorrect) {
@@ -188,33 +204,46 @@ class _ChoiceCard extends StatelessWidget {
       }
     }
 
-    return Card(
-      color: tintColor,
-      shape: RoundedRectangleBorder(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      decoration: BoxDecoration(
+        color: tintColor,
         borderRadius: BorderRadius.circular(14),
-        side: borderColor != null ? BorderSide(color: borderColor, width: 1.5) : BorderSide.none,
+        border: Border.all(color: borderColor, width: 1.5),
       ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: enabled ? onTap : null,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(choice.text, style: const TextStyle(fontWeight: FontWeight.w600)),
-                  ),
-                  if (trailingIcon != null) Icon(trailingIcon, color: borderColor),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: enabled ? onTap : null,
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(choice.text, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    ),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      transitionBuilder: (child, animation) =>
+                          ScaleTransition(scale: animation, child: child),
+                      child: trailingIcon != null
+                          ? Icon(trailingIcon, color: borderColor, key: ValueKey(trailingIcon))
+                          : const SizedBox.shrink(key: ValueKey('none')),
+                    ),
+                  ],
+                ),
+                if (explained != null) ...[
+                  const SizedBox(height: 8),
+                  Text(explained.explanation, style: Theme.of(context).textTheme.bodySmall),
                 ],
-              ),
-              if (explained != null) ...[
-                const SizedBox(height: 8),
-                Text(explained.explanation, style: Theme.of(context).textTheme.bodySmall),
               ],
-            ],
+            ),
           ),
         ),
       ),

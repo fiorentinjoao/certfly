@@ -4,6 +4,9 @@ import '../api/api_client.dart';
 import '../models/me.dart';
 import '../models/progress.dart';
 import '../theme.dart';
+import '../widgets/animated_progress_bar.dart';
+import '../widgets/app_page_route.dart';
+import '../widgets/fade_slide_in.dart';
 import 'lesson_screen.dart';
 
 /// GET /me + GET /certification/{id}/progress (RF-02) — trilha de
@@ -90,14 +93,23 @@ class _HomeScreenState extends State<HomeScreen> {
           }
 
           final data = snapshot.data!;
+          var topicIndex = 0;
           return RefreshIndicator(
             onRefresh: () async => _reload(),
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                _ProfileHeader(me: data.me),
+                FadeSlideIn(child: _ProfileHeader(me: data.me)),
                 const SizedBox(height: 20),
-                for (final domain in data.domains) _DomainSection(domain: domain, onTopicCompleted: _reload, apiClient: widget.apiClient),
+                for (final domain in data.domains)
+                  _DomainSection(
+                    domain: domain,
+                    onTopicCompleted: _reload,
+                    apiClient: widget.apiClient,
+                    // cada tópico soma 1 ao índice global, pra escalonar a
+                    // entrada de toda a lista (não só dentro do domínio).
+                    startIndex: (topicIndex += domain.topics.length) - domain.topics.length,
+                  ),
               ],
             ),
           );
@@ -164,8 +176,14 @@ class _DomainSection extends StatelessWidget {
   final DomainProgress domain;
   final VoidCallback onTopicCompleted;
   final ApiClient apiClient;
+  final int startIndex;
 
-  const _DomainSection({required this.domain, required this.onTopicCompleted, required this.apiClient});
+  const _DomainSection({
+    required this.domain,
+    required this.onTopicCompleted,
+    required this.apiClient,
+    required this.startIndex,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -184,8 +202,11 @@ class _DomainSection extends StatelessWidget {
             ),
           ),
         ),
-        for (final topic in domain.topics)
-          _TopicTile(topic: topic, apiClient: apiClient, onTopicCompleted: onTopicCompleted),
+        for (final (i, topic) in domain.topics.indexed)
+          FadeSlideIn(
+            delay: Duration(milliseconds: 60 * (startIndex + i)),
+            child: _TopicTile(topic: topic, apiClient: apiClient, onTopicCompleted: onTopicCompleted),
+          ),
       ],
     );
   }
@@ -206,8 +227,8 @@ class _TopicTile extends StatelessWidget {
         onTap: topic.unlocked
             ? () async {
                 await Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => LessonScreen(apiClient: apiClient, topicId: topic.id, topicName: topic.name),
+                  appPageRoute(
+                    LessonScreen(apiClient: apiClient, topicId: topic.id, topicName: topic.name),
                   ),
                 );
                 onTopicCompleted();
@@ -244,14 +265,11 @@ class _TopicTile extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: topic.masteryPct,
-                        minHeight: 6,
-                        backgroundColor: AppColors.line,
-                        valueColor: const AlwaysStoppedAnimation(AppColors.purple),
-                      ),
+                    AnimatedProgressBar(
+                      value: topic.masteryPct,
+                      minHeight: 6,
+                      backgroundColor: AppColors.line,
+                      valueColor: AppColors.purple,
                     ),
                   ],
                 ),
