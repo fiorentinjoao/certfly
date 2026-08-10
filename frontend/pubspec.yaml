@@ -70,9 +70,13 @@ flutter:
     - assets/images/mascot_icon.png
     - assets/images/mascot_avatar.png
     - assets/images/mascot_hero.png
+    - assets/images/mascot_face.png
+    - assets/images/google_logo.png
 
   # Poppins — tipografia da marca CertFly (moodboard): "moderna, amigável,
-  # transmite confiança e proximidade".
+  # transmite confiança e proximidade". Fredoka é só pro wordmark "CertFly"
+  # — arredondada, mais "logo", combina com o mascote sem competir com o
+  # Poppins do resto da UI.
   fonts:
     - family: Poppins
       fonts:
@@ -86,3 +90,11 @@ flutter:
           weight: 700
         - asset: assets/fonts/Poppins-ExtraBold.ttf
           weight: 800
+    - family: Fredoka
+      fonts:
+        - asset: assets/fonts/Fredoka-Variable.ttf
+          weight: 400
+        - asset: assets/fonts/Fredoka-Variable.ttf
+          weight: 600
+        - asset: assets/fonts/Fredoka-Variable.ttf
+          weight: 700

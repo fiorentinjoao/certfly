@@ -4,8 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'api/api_client.dart';
 import 'config/app_config.dart';
 import 'screens/home_screen.dart';
-import 'screens/login_screen.dart';
 import 'screens/missing_config_screen.dart';
+import 'screens/welcome_screen.dart';
 import 'theme.dart';
 
 void main() async {
@@ -62,7 +62,7 @@ class _AuthGate extends StatelessWidget {
       builder: (context, snapshot) {
         final session = Supabase.instance.client.auth.currentSession;
         if (session == null) {
-          return const LoginScreen();
+          return const WelcomeScreen();
         }
         final apiClient = ApiClient(baseUrl: AppConfig.apiBaseUrl, token: session.accessToken);
         return HomeScreen(
