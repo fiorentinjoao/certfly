@@ -28,13 +28,13 @@ Um usuário estuda um pouco todo dia, com o motor de repetição espaçada garan
   - Gate de desbloqueio de tópico não reforçado no backend (`POST /topic/{id}/lesson` inicia lição em tópico travado)
   - Falta checagem de ownership em `POST /lesson-session/{id}/complete`
   - Fallback de auth dev-only (HS256) em `backend/app/auth.py` — garantir que não vaza pra produção
+- [ ] Conectar o backend a um projeto Supabase Postgres real (hoje só SQLite local via `DATABASE_URL` não setada, ver `backend/app/repository/db.py`) — dados de usuário/conteúdo passam a persistir de verdade, não só em disco local da máquina de dev
 
 ### Out of Scope
 
 - Hardening adicional do sistema de login/auth (além dos gaps de segurança acima) — já funciona (Google + email via Supabase), fica pra um próximo ciclo
 - Tooling mais simples de autoria de perguntas (hoje é YAML manual) — vira gargalo real só quando o volume de conteúdo crescer mais; adiado pra depois deste ciclo
 - Observabilidade em produção (logs estruturados, métricas, tracing) — mencionada como visão futura, mas não faz parte do escopo ativo agora
-- Conectar a um projeto Supabase real além do já usado pra Auth (hoje roda contra SQLite local para dev/dados) — fora do escopo definido neste ciclo, não foi mencionado como bloqueador
 
 ## Context
 
@@ -61,6 +61,7 @@ Um usuário estuda um pouco todo dia, com o motor de repetição espaçada garan
 | Meta de conteúdo: 50-80 perguntas por certificação, fiel ao exam guide oficial | Cobertura razoável dos domínios sem virar pesquisa infinita; ancorado em fonte oficial evita conteúdo errado/desatualizado | — Pending |
 | Arquitetura/TDD/SDD: foco em processo daqui pra frente, não reescrever código já existente | Motor de core loop já nasceu com TDD e está testado; ganho maior está em travar disciplina pros próximos ciclos, não retrabalho | — Pending |
 | Observabilidade fica só esboçada como fase futura no roadmap | Testes têm prioridade real agora; observabilidade em produção não é urgente sem usuários reais ainda | — Pending |
+| Migrar de SQLite local pra Supabase Postgres real entra no escopo ativo | Hoje nenhum dado de usuário/conteúdo sobrevive fora da máquina de dev — inviabiliza qualquer teste com usuário real fora do dono; decidido após discussão explícita sobre Firebase vs. Supabase confirmar que o schema é relacional e já pensado pra Postgres | — Pending |
 
 ## Evolution
 
