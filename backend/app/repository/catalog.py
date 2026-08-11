@@ -80,6 +80,59 @@ def get_domains_with_topics(
     return result
 
 
+def get_next_topic_id(db: Session, topic_id: uuid.UUID) -> uuid.UUID | None:
+    """Próximo tópico na ordem da trilha, a partir de `topic_id` — usado
+    pelo gate de desbloqueio (RF-09) pra saber qual tópico destravar quando
+    o atual atinge mastery suficiente.
+
+    "Próximo" é: o tópico seguinte (menor `order` maior que o atual) no
+    mesmo domínio; se `topic_id` for o último tópico do domínio, o primeiro
+    tópico (menor `order`) do próximo domínio da mesma certificação. `None`
+    se `topic_id` for o último tópico do último domínio — não há para onde
+    avançar.
+    """
+    current = db.get(TopicORM, topic_id)
+    if current is None:
+        return None
+
+    next_in_domain = db.scalars(
+        select(TopicORM)
+        .where(TopicORM.domain_id == current.domain_id, TopicORM.order > current.order)
+        .order_by(TopicORM.order)
+        .limit(1)
+    ).first()
+    if next_in_domain is not None:
+        return next_in_domain.id
+
+    current_domain = db.get(DomainORM, current.domain_id)
+    if current_domain is None:
+        return None
+
+    next_domain = db.scalars(
+        select(DomainORM)
+        .where(
+            DomainORM.certification_id == current_domain.certification_id,
+            DomainORM.order > current_domain.order,
+        )
+        .order_by(DomainORM.order)
+        .limit(1)
+    ).first()
+    if next_domain is None:
+        return None
+
+    first_topic_of_next_domain = db.scalars(
+        select(TopicORM)
+        .where(TopicORM.domain_id == next_domain.id)
+        .order_by(TopicORM.order)
+        .limit(1)
+    ).first()
+    return (
+        first_topic_of_next_domain.id
+        if first_topic_of_next_domain is not None
+        else None
+    )
+
+
 def get_topic_question_ids(db: Session, topic_id: uuid.UUID) -> list[uuid.UUID]:
     """IDs de todas as questões ativas de um tópico — o "pool" para mastery/lição."""
     return list(
