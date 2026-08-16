@@ -6,6 +6,8 @@ import uuid
 from datetime import date, datetime, timedelta, timezone
 from unittest.mock import patch
 
+import pytest
+
 from app.repository import attempts, catalog, lesson_sessions, srs_state, users
 from app.repository.orm_models import (
     CertificationORM,
@@ -208,10 +210,30 @@ def test_lesson_session_create_e_complete(db_session):
     assert session.completed_at is None
 
     completed = lesson_sessions.complete(
-        db_session, session.id, completed_at=datetime.now(timezone.utc), xp_earned=25
+        db_session, session.id, user_id, completed_at=datetime.now(timezone.utc), xp_earned=25
     )
     assert completed.completed_at is not None
     assert completed.xp_earned == 25
+
+
+def test_lesson_session_get_e_complete_nao_vazam_pra_outro_usuario(db_session):
+    """Regressão de IDOR: sessão de um usuário não pode ser lida nem
+    completada por outro, mesmo sabendo o `session_id`."""
+    topic, _, _ = _seed_topic_with_one_question(db_session)
+    owner_id = uuid.uuid4()
+    attacker_id = uuid.uuid4()
+
+    session = lesson_sessions.create(
+        db_session, user_id=owner_id, topic_id=topic.id, started_at=datetime.now(timezone.utc)
+    )
+
+    assert lesson_sessions.get(db_session, session.id, attacker_id) is None
+    assert lesson_sessions.get(db_session, session.id, owner_id) is not None
+
+    with pytest.raises(ValueError):
+        lesson_sessions.complete(
+            db_session, session.id, attacker_id, completed_at=datetime.now(timezone.utc), xp_earned=25
+        )
 
 
 def test_topic_progress_comeca_bloqueado_e_unlock_topic_destrava(db_session):
