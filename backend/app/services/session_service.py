@@ -36,7 +36,10 @@ class LessonSummary:
 def complete_lesson_session(
     db: Session, *, session_id: uuid.UUID, user_id: uuid.UUID, today: date, now: datetime
 ) -> LessonSummary:
-    session = lesson_sessions.get(db, session_id)
+    # Escopado a user_id: uma sessão que não pertence a esse usuário não é
+    # encontrada, exatamente como se não existisse (evita IDOR — ver
+    # revisão de segurança).
+    session = lesson_sessions.get(db, session_id, user_id)
     if session is None:
         raise ValueError(f"lesson_session {session_id} não encontrada")
 
@@ -46,7 +49,7 @@ def complete_lesson_session(
     # — o XP da sessão é a soma das tentativas desse usuário, nas questões
     # do tópico, desde que a sessão começou.
     xp_earned = attempts.sum_xp_since(db, user_id, question_ids, since=session.started_at)
-    lesson_sessions.complete(db, session_id, completed_at=now, xp_earned=xp_earned)
+    lesson_sessions.complete(db, session_id, user_id, completed_at=now, xp_earned=xp_earned)
 
     user = users.get_user(db, user_id)
     if user is None:
