@@ -133,6 +133,20 @@ def get_next_topic_id(db: Session, topic_id: uuid.UUID) -> uuid.UUID | None:
     )
 
 
+def is_entry_point_topic(db: Session, topic_id: uuid.UUID) -> bool:
+    """Primeiro tópico do primeiro domínio de uma certificação — o único
+    ponto de entrada da trilha que começa destravado por padrão (mesma
+    regra usada em progress_service.get_certification_progress, pra não
+    haver duas definições divergentes de "entry point")."""
+    topic = db.get(TopicORM, topic_id)
+    if topic is None:
+        return False
+    domain = db.get(DomainORM, topic.domain_id)
+    if domain is None:
+        return False
+    return domain.order == 1 and topic.order == 1
+
+
 def get_topic_question_ids(db: Session, topic_id: uuid.UUID) -> list[uuid.UUID]:
     """IDs de todas as questões ativas de um tópico — o "pool" para mastery/lição."""
     return list(

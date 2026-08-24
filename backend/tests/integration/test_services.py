@@ -4,7 +4,9 @@ contra SQLite real (ver conftest.py)."""
 import uuid
 from datetime import date, datetime, timedelta, timezone
 
-from app.repository import users
+import pytest
+
+from app.repository import lesson_sessions, users
 from app.repository.orm_models import ChoiceORM, DomainORM, QuestionORM, TopicORM
 from app.services import (
     answer_service,
@@ -88,6 +90,35 @@ def test_start_lesson_prioriza_revisao_vencida_sobre_questoes_novas(
 
     lesson_question_ids = [lq.question.id for lq in lesson.questions]
     assert lesson_question_ids[0] == due_question.id
+
+
+def test_start_lesson_recusa_topico_bloqueado(db_session, seed_topic):
+    # Regressão de segurança: o gate de desbloqueio (RF-09) não pode ser só
+    # decorativo na UI — a API tem que recusar iniciar lição num tópico que
+    # o usuário ainda não destravou (ver revisão de segurança).
+    topic, _questions = seed_topic(2)
+    locked_topic = _add_topic_after(db_session, topic, topic_order=2)
+    user_id = _new_user(db_session)
+
+    with pytest.raises(PermissionError):
+        lesson_service.start_lesson(db_session, user_id, locked_topic.id, TODAY, NOW)
+
+
+def test_start_lesson_permite_topico_destravado_persistido(db_session, seed_topic):
+    # Complemento do teste acima: uma vez que o gate marcou o tópico como
+    # destravado (UserTopicProgressORM.unlocked=True), a API tem que
+    # aceitar, mesmo não sendo o entry point da trilha.
+    topic, _questions = seed_topic(2)
+    unlocked_topic = _add_topic_after(db_session, topic, topic_order=2, n_questions=1)
+    user_id = _new_user(db_session)
+    lesson_sessions.unlock_topic(
+        db_session, user_id, unlocked_topic.id, unlocked_at=NOW
+    )
+
+    lesson = lesson_service.start_lesson(
+        db_session, user_id, unlocked_topic.id, TODAY, NOW
+    )
+    assert len(lesson.questions) == 1
 
 
 # --- answer_service ---------------------------------------------------------------
