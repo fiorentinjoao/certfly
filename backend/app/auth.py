@@ -27,7 +27,22 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 load_dotenv()  # lê backend/.env se existir; não sobrescreve env vars já setadas
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_JWT_SECRET = os.environ.get("SUPABASE_JWT_SECRET")  # dev-only, ver docstring do módulo
+SUPABASE_JWT_SECRET = os.environ.get(
+    "SUPABASE_JWT_SECRET"
+)  # dev-only, ver docstring do módulo
+_ENVIRONMENT = os.environ.get("ENVIRONMENT", "development")
+
+if _ENVIRONMENT == "production" and SUPABASE_JWT_SECRET:
+    # SUPABASE_JWT_SECRET nunca deveria existir em produção (só
+    # SUPABASE_URL) — mas nada barrava alguém de setar as duas por engano
+    # num .env de deploy copiado do dev. Falha ruidosa no boot é melhor que
+    # aceitar tokens HS256 forjados localmente como se fossem do Supabase
+    # de verdade.
+    raise RuntimeError(
+        "SUPABASE_JWT_SECRET não pode estar setado com ENVIRONMENT=production — "
+        "isso habilitaria login com tokens HS256 forjados localmente, "
+        "ignorando a validação real do Supabase. Remova essa variável."
+    )
 
 _security = HTTPBearer(auto_error=False)
 
@@ -51,7 +66,9 @@ def _decode(token: str) -> dict:
     header = jwt.get_unverified_header(token)
 
     if header.get("alg") == "HS256" and SUPABASE_JWT_SECRET:
-        return jwt.decode(token, SUPABASE_JWT_SECRET, algorithms=["HS256"], audience="authenticated")
+        return jwt.decode(
+            token, SUPABASE_JWT_SECRET, algorithms=["HS256"], audience="authenticated"
+        )
 
     if not SUPABASE_URL:
         raise HTTPException(
@@ -84,6 +101,8 @@ def get_current_user(
     try:
         user_id = uuid.UUID(payload["sub"])
     except (KeyError, ValueError) as exc:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token sem 'sub' válido") from exc
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED, "Token sem 'sub' válido"
+        ) from exc
 
     return AuthenticatedUser(id=user_id, email=payload.get("email", ""))
