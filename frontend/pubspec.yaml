@@ -41,6 +41,16 @@ dependencies:
   # Login real (RF-01) — e-mail/senha via Supabase Auth (ver lib/auth/).
   supabase_flutter: ^2.17.1
 
+  # Mascote animado (.lottie) na tela de resumo de lição — animação vetorial
+  # de verdade (LottieFiles, licença Simple License, uso comercial livre),
+  # em vez de transformar um PNG estático (ver lesson_summary_screen.dart).
+  lottie: ^3.3.1
+
+  # Persiste a certificação ativa escolhida em CertificationsScreen — já
+  # entrava como dependência transitiva (via supabase_flutter), agora
+  # declarada direto porque main_shell.dart passa a depender dela.
+  shared_preferences: ^2.5.5
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -72,29 +82,34 @@ flutter:
     - assets/images/mascot_hero.png
     - assets/images/mascot_face.png
     - assets/images/google_logo.png
+    # Panda animado (Lottie/dotLottie) — tela de resumo de lição
+    # (ver lesson_summary_screen.dart). "Panda Waving" by Bhaskar,
+    # LottieFiles Simple License (uso comercial livre, sem atribuição).
+    - assets/animations/panda_hero.lottie
+    # Logos oficiais de provedor (GCP/AWS/Azure) — usados na aba
+    # Certificações. Decisão explícita do dono, ciente do risco de uso de
+    # marca registrada sem autorização (guidelines de marca de cada
+    # provedor); ver certifications_screen.dart.
+    - assets/images/logo_gcp.png
+    - assets/images/logo_aws.png
+    - assets/images/logo_azure.png
 
-  # Poppins — tipografia da marca CertFly (moodboard): "moderna, amigável,
-  # transmite confiança e proximidade". Fredoka é só pro wordmark "CertFly"
-  # — arredondada, mais "logo", combina com o mascote sem competir com o
-  # Poppins do resto da UI.
+  # Nunito — tipografia de toda a UI (trocado de Poppins/Fredoka em
+  # 2026-08-10, alinhando o app real ao sistema visual refinado no
+  # protótipo: é a fonte que a própria Duolingo recomenda como substituto
+  # público de sua Feather Bold proprietária — ver docs do design system
+  # deles, extraído do bundle JS oficial). Fonte variável (um arquivo só,
+  # múltiplos pesos), mesmo padrão que já era usado pro Fredoka antigo.
   fonts:
-    - family: Poppins
+    - family: Nunito
       fonts:
-        - asset: assets/fonts/Poppins-Regular.ttf
+        - asset: assets/fonts/Nunito-Variable.ttf
           weight: 400
-        - asset: assets/fonts/Poppins-Medium.ttf
-          weight: 500
-        - asset: assets/fonts/Poppins-SemiBold.ttf
+        - asset: assets/fonts/Nunito-Variable.ttf
           weight: 600
-        - asset: assets/fonts/Poppins-Bold.ttf
+        - asset: assets/fonts/Nunito-Variable.ttf
           weight: 700
-        - asset: assets/fonts/Poppins-ExtraBold.ttf
+        - asset: assets/fonts/Nunito-Variable.ttf
           weight: 800
-    - family: Fredoka
-      fonts:
-        - asset: assets/fonts/Fredoka-Variable.ttf
-          weight: 400
-        - asset: assets/fonts/Fredoka-Variable.ttf
-          weight: 600
-        - asset: assets/fonts/Fredoka-Variable.ttf
-          weight: 700
+        - asset: assets/fonts/Nunito-Variable.ttf
+          weight: 900

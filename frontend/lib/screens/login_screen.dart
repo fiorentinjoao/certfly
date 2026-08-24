@@ -2,9 +2,41 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../theme.dart';
+import 'forgot_password_screen.dart';
+
+/// Formata o telefone enquanto o usuário digita, no padrão BR de celular:
+/// `(XX) XXXXX-XXXX` (DDD de 2 dígitos + 9 dígitos). Ignora tudo que não
+/// for dígito digitado e limita a 11 dígitos — sem depender de pacote
+/// externo de máscara.
+class _BrPhoneInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    final digits = newValue.text.replaceAll(RegExp(r'\D'), '').substring(
+      0,
+      newValue.text.replaceAll(RegExp(r'\D'), '').length > 11
+          ? 11
+          : newValue.text.replaceAll(RegExp(r'\D'), '').length,
+    );
+
+    final buffer = StringBuffer();
+    for (var i = 0; i < digits.length; i++) {
+      if (i == 0) buffer.write('(');
+      buffer.write(digits[i]);
+      if (i == 1) buffer.write(') ');
+      if (i == 6) buffer.write('-');
+    }
+
+    final formatted = buffer.toString();
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
 
 /// RF-01: formulário de e-mail/senha — entrar OU criar conta, conforme a
 /// escolha feita na WelcomeScreen (lib/screens/welcome_screen.dart), que é
@@ -35,6 +67,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  final _phoneController = TextEditingController();
 
   late bool _isSignUp;
   bool _submitting = false;
@@ -51,6 +85,8 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -69,11 +105,19 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       if (!_isSignUp) {
         await Supabase.instance.client.auth.signInWithPassword(email: email, password: password);
-        // Sucesso: onAuthStateChange em main.dart cuida da navegação.
+        // A LoginScreen foi empilhada via Navigator.push por cima da rota
+        // raiz (WelcomeScreen/_AuthGate) — quando a sessão muda, o
+        // StreamBuilder em main.dart._AuthGate troca o widget DAQUELA
+        // rota pra MainShell, mas essa troca não fecha rotas empilhadas
+        // por cima dela sozinha. Sem esse pop, a tela de login continua
+        // visível até o usuário voltar manualmente (revelando o app já
+        // trocado por baixo).
+        if (mounted) Navigator.of(context).popUntil((route) => route.isFirst);
       } else {
         final response = await Supabase.instance.client.auth.signUp(
           email: email,
           password: password,
+          data: {'phone': _phoneController.text.trim()},
         );
         if (response.session == null) {
           // Confirmação de e-mail ativada no projeto — sem sessão ainda.
@@ -118,6 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
         onTimeout: () => throw TimeoutException('sem resposta do navegador'),
       );
       final callbackUri = request.requestedUri;
+      debugPrint('[Google OAuth] callback recebido: $callbackUri');
 
       request.response
         ..statusCode = 200
@@ -125,11 +170,22 @@ class _LoginScreenState extends State<LoginScreen> {
         ..write('<html><body><h2>Pode fechar esta aba e voltar pro CertFly.</h2></body></html>');
       await request.response.close();
 
-      await Supabase.instance.client.auth.getSessionFromUrl(callbackUri);
-      // Sucesso: onAuthStateChange em main.dart cuida da navegação.
+      debugPrint('[Google OAuth] trocando code por sessão...');
+      await Supabase.instance.client.auth
+          .getSessionFromUrl(callbackUri)
+          .timeout(
+            const Duration(seconds: 20),
+            onTimeout: () => throw TimeoutException('exchangeCodeForSession não respondeu em 20s'),
+          );
+      debugPrint('[Google OAuth] sessão obtida com sucesso');
+      // Ver comentário equivalente em _submit(): sem esse pop a tela de
+      // login fica empilhada por cima do MainShell já trocado por baixo.
+      if (mounted) Navigator.of(context).popUntil((route) => route.isFirst);
     } on AuthException catch (e) {
+      debugPrint('[Google OAuth] AuthException: ${e.message}');
       setState(() => _error = _friendlyError(e));
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('[Google OAuth] erro inesperado: $e\n$stack');
       setState(() => _error = 'Não consegui completar o login com Google. Tente de novo.');
     } finally {
       await server?.close(force: true);
@@ -170,6 +226,23 @@ class _LoginScreenState extends State<LoginScreen> {
                           (value == null || !value.contains('@')) ? 'Digite um e-mail válido' : null,
                     ),
                     const SizedBox(height: 14),
+                    if (_isSignUp) ...[
+                      const SizedBox(height: 14),
+                      TextFormField(
+                        controller: _phoneController,
+                        keyboardType: TextInputType.phone,
+                        inputFormatters: [_BrPhoneInputFormatter()],
+                        decoration: const InputDecoration(
+                          labelText: 'Telefone',
+                          hintText: '(11) 91234-5678',
+                        ),
+                        validator: (value) {
+                          final digits = (value ?? '').replaceAll(RegExp(r'\D'), '');
+                          return digits.length == 11 ? null : 'Digite um telefone válido com DDD';
+                        },
+                      ),
+                    ],
+                    const SizedBox(height: 14),
                     TextFormField(
                       controller: _passwordController,
                       obscureText: true,
@@ -177,6 +250,34 @@ class _LoginScreenState extends State<LoginScreen> {
                       validator: (value) =>
                           (value == null || value.length < 6) ? 'Mínimo de 6 caracteres' : null,
                     ),
+                    if (_isSignUp) ...[
+                      const SizedBox(height: 14),
+                      TextFormField(
+                        controller: _confirmPasswordController,
+                        obscureText: true,
+                        decoration: const InputDecoration(labelText: 'Confirmar senha'),
+                        validator: (value) =>
+                            (value != _passwordController.text) ? 'As senhas não coincidem' : null,
+                      ),
+                    ],
+                    if (!_isSignUp) ...[
+                      const SizedBox(height: 4),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: _submitting
+                              ? null
+                              : () => Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+                                ),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            foregroundColor: AppColors.textDim,
+                          ),
+                          child: const Text('Esqueci minha senha', style: TextStyle(fontSize: 12)),
+                        ),
+                      ),
+                    ],
                     if (_error != null) ...[
                       const SizedBox(height: 14),
                       Text(_error!, style: const TextStyle(color: AppColors.red), textAlign: TextAlign.center),

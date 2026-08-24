@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
-"""Seed de conteúdo de exemplo no backend + gera frontend/dev.json com um
-JWT de teste — pra rodar o app Flutter localmente sem precisar de um
-projeto Supabase real ainda (ver docs/requirements.md, seção "Em aberto",
-e frontend/lib/auth/auth_gateway.dart).
+"""Seed de conteúdo (a partir de content/*.yaml) no backend + gera
+frontend/dev.json com um JWT de teste — pra rodar o app Flutter localmente
+sem precisar de um projeto Supabase real ainda (ver docs/requirements.md,
+seção "Em aberto", e frontend/lib/auth/auth_gateway.dart).
+
+O conteúdo em si (provedores/certificações/domínios/tópicos/perguntas) NÃO
+mora mais neste script — vive em arquivos de dados versionados separados,
+um por certificação, em content/*.yaml (ver docs/content-plan.md pro
+formato e o plano de volume). Isso existe pra content authoring (escrever
+centenas de perguntas) não virar um arquivo Python gigante e ilegível.
 
 Uso (a partir da raiz do repo, com o venv do backend já criado):
 
@@ -13,7 +19,10 @@ Depois, suba o backend com o MESMO secret usado aqui:
     cd backend && SUPABASE_JWT_SECRET=dev-only-secret-nao-usar-em-producao \
         .venv/bin/uvicorn app.main:app
 
-E rode o app apontando pro dev.json gerado:
+E rode o app apontando pro dev.json gerado (a certificação usada no
+dev.json é a PRIMEIRA lida em ordem alfabética de arquivo — hoje
+aws-dea-c01.yaml; troque manualmente o certificationId no dev.json se
+quiser testar outra):
 
     cd frontend && flutter run -d linux --dart-define-from-file=dev.json
 
@@ -27,8 +36,11 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
+import yaml
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 BACKEND_DIR = REPO_ROOT / "backend"
+CONTENT_DIR = REPO_ROOT / "content"
 sys.path.insert(0, str(BACKEND_DIR))
 
 # DATABASE_URL default (app/repository/db.py) é relativo ao cwd do
@@ -52,118 +64,68 @@ from app.repository.orm_models import (  # noqa: E402
 
 DEV_JWT_SECRET = "dev-only-secret-nao-usar-em-producao"
 
-QUESTIONS = [
-    (
-        "Qual tipo de tabela do BigQuery reduz custo de consultas filtrando por "
-        "uma coluna de data?",
-        [
-            (
-                "Tabela particionada por data",
-                True,
-                "Particionar por data faz o BigQuery escanear só as partições "
-                "relevantes, reduzindo bytes lidos e custo.",
-            ),
-            (
-                "Tabela clusterizada por STRING",
-                False,
-                "Clustering ajuda em filtros/agrupamentos, mas não é a técnica "
-                "específica pra reduzir custo em filtros de data.",
-            ),
-            (
-                "View materializada",
-                False,
-                "Views materializadas aceleram consultas repetidas, mas não são "
-                "a resposta pra particionamento por data.",
-            ),
-        ],
-    ),
-    (
-        "Qual comando cria uma tabela externa no BigQuery apontando pro Cloud Storage?",
-        [
-            (
-                "CREATE OR REPLACE EXTERNAL TABLE",
-                True,
-                "É o comando padrão do BigQuery pra registrar uma tabela externa "
-                "sobre dados no GCS.",
-            ),
-            (
-                "CREATE VIEW",
-                False,
-                "CREATE VIEW cria uma view lógica sobre uma query, não uma "
-                "tabela externa sobre arquivos.",
-            ),
-            (
-                "CREATE MATERIALIZED VIEW",
-                False,
-                "Materialized view pré-computa resultados de uma query; não "
-                "aponta pra arquivos externos.",
-            ),
-        ],
-    ),
-    (
-        "Qual serviço do Google Cloud é um banco NoSQL de baixa latência para "
-        "séries temporais e IoT?",
-        [
-            (
-                "Bigtable",
-                True,
-                "Bigtable é o banco NoSQL wide-column do GCP voltado a alta "
-                "taxa de escrita/leitura, ideal pra séries temporais e IoT.",
-            ),
-            (
-                "Firestore",
-                False,
-                "Firestore é um banco de documentos voltado a apps mobile/web, "
-                "não otimizado pro perfil de série temporal em altíssima escala.",
-            ),
-            (
-                "Cloud SQL",
-                False,
-                "Cloud SQL é relacional (Postgres/MySQL), não o encaixe pra "
-                "esse padrão de acesso.",
-            ),
-        ],
-    ),
-]
+
+def load_content_file(db, path: Path) -> CertificationORM:
+    """Lê um YAML de content/ e cria provider/certification/domain/topic/
+    question/choice correspondentes. Cada execução do script recria o
+    banco do zero (ver unlink acima), então isso sempre faz INSERT puro —
+    sem lógica de upsert/dedup."""
+    data = yaml.safe_load(path.read_text())
+
+    provider = ProviderORM(id=uuid.uuid4(), **data["provider"])
+    certification = CertificationORM(
+        id=uuid.uuid4(),
+        provider_id=provider.id,
+        **data["certification"],
+    )
+    db.add_all([provider, certification])
+
+    question_count = 0
+    for domain_data in data["domains"]:
+        topics_data = domain_data.pop("topics")
+        domain = DomainORM(
+            id=uuid.uuid4(), certification_id=certification.id, **domain_data
+        )
+        db.add(domain)
+
+        for topic_data in topics_data:
+            questions_data = topic_data.pop("questions")
+            topic = TopicORM(id=uuid.uuid4(), domain_id=domain.id, **topic_data)
+            db.add(topic)
+
+            for question_data in questions_data:
+                question = QuestionORM(
+                    id=uuid.uuid4(),
+                    topic_id=topic.id,
+                    prompt=question_data["prompt"],
+                    status="active",
+                )
+                db.add(question)
+                question_count += 1
+                for choice_data in question_data["choices"]:
+                    db.add(
+                        ChoiceORM(
+                            id=uuid.uuid4(),
+                            question_id=question.id,
+                            text=choice_data["text"],
+                            is_correct=choice_data["correct"],
+                            explanation=choice_data["explanation"],
+                        )
+                    )
+
+    print(f"✓ {path.name}: {question_count} perguntas em '{certification.name}'.")
+    return certification
 
 
 def main() -> None:
     Base.metadata.create_all(engine)
     db = SessionLocal()
 
-    provider = ProviderORM(id=uuid.uuid4(), name="Google Cloud", slug="google-cloud")
-    certification = CertificationORM(
-        id=uuid.uuid4(),
-        provider_id=provider.id,
-        name="Professional Data Engineer",
-        slug="gcp-pde",
-    )
-    domain = DomainORM(
-        id=uuid.uuid4(),
-        certification_id=certification.id,
-        name="Storing Data",
-        slug="storing-data",
-        order=1,
-    )
-    topic = TopicORM(id=uuid.uuid4(), domain_id=domain.id, name="BigQuery", slug="bigquery", order=1)
+    content_files = sorted(CONTENT_DIR.glob("*.yaml"))
+    if not content_files:
+        raise SystemExit(f"Nenhum arquivo .yaml encontrado em {CONTENT_DIR}")
 
-    question_rows = []
-    for prompt, choices in QUESTIONS:
-        question = QuestionORM(id=uuid.uuid4(), topic_id=topic.id, prompt=prompt, status="active")
-        question_rows.append(question)
-        db.add(question)
-        for text, is_correct, explanation in choices:
-            db.add(
-                ChoiceORM(
-                    id=uuid.uuid4(),
-                    question_id=question.id,
-                    text=text,
-                    is_correct=is_correct,
-                    explanation=explanation,
-                )
-            )
-
-    db.add_all([provider, certification, domain, topic])
+    certifications = [load_content_file(db, path) for path in content_files]
     db.commit()
 
     user_id = uuid.uuid4()
@@ -178,22 +140,19 @@ def main() -> None:
         algorithm="HS256",
     )
 
+    # Primeira certificação (ordem alfabética de arquivo) vira a default do
+    # dev.json — troque certificationId manualmente pra testar outra.
     dev_config = {
         "apiBaseUrl": "http://localhost:8000",
         "devToken": token,
-        "certificationId": str(certification.id),
+        "certificationId": str(certifications[0].id),
     }
     dev_json_path = REPO_ROOT / "frontend" / "dev.json"
     dev_json_path.write_text(json.dumps(dev_config, indent=2))
 
-    print(f"✓ {len(question_rows)} questões de exemplo criadas em '{topic.name}'.")
-    print(f"✓ config de dev escrita em {dev_json_path}")
-    print()
-    print("Suba o backend com o MESMO secret:")
-    print(f"  cd backend && SUPABASE_JWT_SECRET={DEV_JWT_SECRET} .venv/bin/uvicorn app.main:app")
-    print()
-    print("Rode o app:")
-    print("  cd frontend && flutter run -d linux --dart-define-from-file=dev.json")
+    print(
+        f"✓ config de dev escrita em {dev_json_path} (certificação: {certifications[0].name})"
+    )
 
 
 if __name__ == "__main__":

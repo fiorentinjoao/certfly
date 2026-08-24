@@ -3,8 +3,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'api/api_client.dart';
 import 'config/app_config.dart';
-import 'screens/home_screen.dart';
+import 'screens/main_shell.dart';
 import 'screens/missing_config_screen.dart';
+import 'screens/new_password_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'theme.dart';
 
@@ -45,7 +46,7 @@ class _Bootstrap extends StatelessWidget {
 
     if (AppConfig.hasDevSession) {
       final apiClient = ApiClient(baseUrl: AppConfig.apiBaseUrl, token: AppConfig.devToken);
-      return HomeScreen(apiClient: apiClient, certificationId: AppConfig.certificationId);
+      return MainShell(apiClient: apiClient, certificationId: AppConfig.certificationId);
     }
 
     return const _AuthGate();
@@ -60,12 +61,20 @@ class _AuthGate extends StatelessWidget {
     return StreamBuilder<AuthState>(
       stream: Supabase.instance.client.auth.onAuthStateChange,
       builder: (context, snapshot) {
+        // Recuperação de senha (ver forgot_password_screen.dart): o
+        // Supabase SDK dispara esse evento quando detecta uma sessão de
+        // recuperação válida — é o ponto oficial de integração pra levar
+        // o usuário pra trocar a senha, em vez de cair direto na Home.
+        if (snapshot.data?.event == AuthChangeEvent.passwordRecovery) {
+          return const NewPasswordScreen();
+        }
+
         final session = Supabase.instance.client.auth.currentSession;
         if (session == null) {
           return const WelcomeScreen();
         }
         final apiClient = ApiClient(baseUrl: AppConfig.apiBaseUrl, token: session.accessToken);
-        return HomeScreen(
+        return MainShell(
           apiClient: apiClient,
           certificationId: AppConfig.certificationId,
           onLogout: () => Supabase.instance.client.auth.signOut(),

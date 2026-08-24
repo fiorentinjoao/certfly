@@ -3,13 +3,17 @@
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.models.entities import AppUser
 from app.repository.db import get_db
 from app.routers.deps import get_current_app_user
-from app.routers.schemas import LessonChoiceResponse, LessonQuestionResponse, LessonResponse
+from app.routers.schemas import (
+    LessonChoiceResponse,
+    LessonQuestionResponse,
+    LessonResponse,
+)
 from app.services import lesson_service
 
 router = APIRouter(tags=["lesson"])
@@ -22,7 +26,12 @@ def start_lesson(
     db: Session = Depends(get_db),
 ) -> LessonResponse:
     now = datetime.now(timezone.utc)
-    lesson = lesson_service.start_lesson(db, user.id, topic_id, today=now.date(), now=now)
+    try:
+        lesson = lesson_service.start_lesson(
+            db, user.id, topic_id, today=now.date(), now=now
+        )
+    except PermissionError as exc:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
 
     return LessonResponse(
         session_id=lesson.session.id,

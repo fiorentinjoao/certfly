@@ -34,7 +34,12 @@ class LessonSummary:
 
 
 def complete_lesson_session(
-    db: Session, *, session_id: uuid.UUID, user_id: uuid.UUID, today: date, now: datetime
+    db: Session,
+    *,
+    session_id: uuid.UUID,
+    user_id: uuid.UUID,
+    today: date,
+    now: datetime,
 ) -> LessonSummary:
     # Escopado a user_id: uma sessão que não pertence a esse usuário não é
     # encontrada, exatamente como se não existisse (evita IDOR — ver
@@ -48,15 +53,21 @@ def complete_lesson_session(
     # attempt não tem FK pra lesson_session no schema (docs/system-design.md)
     # — o XP da sessão é a soma das tentativas desse usuário, nas questões
     # do tópico, desde que a sessão começou.
-    xp_earned = attempts.sum_xp_since(db, user_id, question_ids, since=session.started_at)
-    lesson_sessions.complete(db, session_id, user_id, completed_at=now, xp_earned=xp_earned)
+    xp_earned = attempts.sum_xp_since(
+        db, user_id, question_ids, since=session.started_at
+    )
+    lesson_sessions.complete(
+        db, session_id, user_id, completed_at=now, xp_earned=xp_earned
+    )
 
     user = users.get_user(db, user_id)
     if user is None:
         raise ValueError(f"app_user {user_id} não encontrado")
 
     new_streak = update_streak(
-        current_streak=user.current_streak, last_active_date=user.last_active_date, today=today
+        current_streak=user.current_streak,
+        last_active_date=user.last_active_date,
+        today=today,
     )
     users.update_streak(db, user_id, new_streak=new_streak, today=today)
 
@@ -68,7 +79,13 @@ def complete_lesson_session(
         min_questions_seen=min_questions_seen,
     )
     if unlocked:
-        lesson_sessions.unlock_topic(db, user_id, session.topic_id, unlocked_at=now)
+        # Destrava o PRÓXIMO tópico da trilha, não o atual — o atual já é
+        # acessível (é o próprio que o usuário acabou de fazer a lição
+        # nele); marcar `session.topic_id` aqui era o bug: destravava o
+        # tópico que já estava destravado e nunca liberava o seguinte.
+        next_topic_id = catalog.get_next_topic_id(db, session.topic_id)
+        if next_topic_id is not None:
+            lesson_sessions.unlock_topic(db, user_id, next_topic_id, unlocked_at=now)
 
     return LessonSummary(
         xp_earned=xp_earned,

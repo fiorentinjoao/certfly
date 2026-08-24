@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../api/api_client.dart';
 import '../models/answer.dart';
@@ -7,6 +8,7 @@ import '../theme.dart';
 import '../widgets/animated_progress_bar.dart';
 import '../widgets/app_page_route.dart';
 import '../widgets/fade_slide_in.dart';
+import '../widgets/skeleton.dart';
 import 'lesson_summary_screen.dart';
 
 /// POST /topic/{id}/lesson (RF-03) + POST /question/{id}/answer (RF-04,
@@ -50,9 +52,20 @@ class _LessonScreenState extends State<LessonScreen> {
     try {
       final result = await widget.apiClient.answerQuestion(question.id, choiceId);
       setState(() => _currentAnswer = result);
+      // Feedback tátil no momento da resposta — reforça acerto/erro sem
+      // depender só de cor/ícone na tela (padrão comum em apps de hábito).
+      if (result.isCorrect) {
+        HapticFeedback.lightImpact();
+      } else {
+        HapticFeedback.heavyImpact();
+      }
     } finally {
       setState(() => _submitting = false);
     }
+  }
+
+  void _retryLesson() {
+    setState(() => _lessonFuture = widget.apiClient.startLesson(widget.topicId));
   }
 
   Future<void> _next(Lesson lesson) async {
@@ -83,10 +96,25 @@ class _LessonScreenState extends State<LessonScreen> {
           future: _lessonFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState != ConnectionState.done) {
-              return const Center(child: CircularProgressIndicator());
+              return const _QuestionSkeleton();
             }
             if (snapshot.hasError) {
-              return Center(child: Text('Erro ao gerar a lição: ${snapshot.error}'));
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Não consegui gerar a lição',
+                        style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 12),
+                      FilledButton(onPressed: _retryLesson, child: const Text('Tentar novamente')),
+                    ],
+                  ),
+                ),
+              );
             }
 
             final lesson = snapshot.data!;
@@ -161,6 +189,33 @@ class _LessonScreenState extends State<LessonScreen> {
           },
         ),
       ),
+    );
+  }
+}
+
+/// Esboço da pergunta + alternativas enquanto a lição é gerada
+/// (POST /topic/{id}/lesson pode levar um instante — motor de SRS decide
+/// quais questões entram) — no lugar de um spinner sem forma.
+class _QuestionSkeleton extends StatelessWidget {
+  const _QuestionSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      physics: const NeverScrollableScrollPhysics(),
+      children: [
+        Skeleton(width: 140, height: 12, borderRadius: BorderRadius.circular(6)),
+        const SizedBox(height: 12),
+        const Skeleton(width: double.infinity, height: 22, borderRadius: BorderRadius.all(Radius.circular(6))),
+        const SizedBox(height: 8),
+        Skeleton(width: 220, height: 22, borderRadius: BorderRadius.circular(6)),
+        const SizedBox(height: 24),
+        for (var i = 0; i < 4; i++) ...[
+          Skeleton(width: double.infinity, height: 56, borderRadius: BorderRadius.circular(14)),
+          const SizedBox(height: 12),
+        ],
+      ],
     );
   }
 }

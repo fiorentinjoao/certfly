@@ -27,10 +27,18 @@ def _seed_topic_with_one_question(db_session):
         id=uuid.uuid4(), provider_id=provider.id, name="PDE", slug="pde"
     )
     domain = DomainORM(
-        id=uuid.uuid4(), certification_id=certification.id, name="Storing Data", slug="storing", order=1
+        id=uuid.uuid4(),
+        certification_id=certification.id,
+        name="Storing Data",
+        slug="storing",
+        order=1,
     )
-    topic = TopicORM(id=uuid.uuid4(), domain_id=domain.id, name="BigQuery", slug="bigquery", order=1)
-    question = QuestionORM(id=uuid.uuid4(), topic_id=topic.id, prompt="...", status="active")
+    topic = TopicORM(
+        id=uuid.uuid4(), domain_id=domain.id, name="BigQuery", slug="bigquery", order=1
+    )
+    question = QuestionORM(
+        id=uuid.uuid4(), topic_id=topic.id, prompt="...", status="active"
+    )
     choice = ChoiceORM(
         id=uuid.uuid4(),
         question_id=question.id,
@@ -99,7 +107,9 @@ def test_update_streak_persiste_streak_e_last_active_date(db_session):
     user_id = uuid.uuid4()
     users.get_or_create_user(db_session, user_id, "user@example.com")
 
-    updated = users.update_streak(db_session, user_id, new_streak=1, today=date(2026, 8, 9))
+    updated = users.update_streak(
+        db_session, user_id, new_streak=1, today=date(2026, 8, 9)
+    )
 
     assert updated.current_streak == 1
     assert updated.longest_streak == 1
@@ -135,6 +145,68 @@ def test_get_questions_with_choices(db_session):
     assert choices[0].is_correct is True
 
 
+def _seed_trilha(db_session, *, topics_per_domain):
+    """Monta Provider -> Certification -> N domínios, cada um com os
+    tópicos em `topics_per_domain` (lista de listas de nomes), todos
+    ordenados por `order` = posição na lista — pra testar navegação
+    sequencial entre tópicos/domínios (catalog.get_next_topic_id)."""
+    provider = ProviderORM(
+        id=uuid.uuid4(), name="Google Cloud", slug=f"gcp-{uuid.uuid4()}"
+    )
+    certification = CertificationORM(
+        id=uuid.uuid4(), provider_id=provider.id, name="PDE", slug=f"pde-{uuid.uuid4()}"
+    )
+    db_session.add_all([provider, certification])
+
+    domains_topics = []
+    for domain_order, topic_names in enumerate(topics_per_domain, start=1):
+        domain = DomainORM(
+            id=uuid.uuid4(),
+            certification_id=certification.id,
+            name=f"Domain {domain_order}",
+            slug=f"domain-{domain_order}-{uuid.uuid4()}",
+            order=domain_order,
+        )
+        db_session.add(domain)
+        topics = []
+        for topic_order, name in enumerate(topic_names, start=1):
+            topic = TopicORM(
+                id=uuid.uuid4(),
+                domain_id=domain.id,
+                name=name,
+                slug=f"{name}-{uuid.uuid4()}",
+                order=topic_order,
+            )
+            db_session.add(topic)
+            topics.append(topic)
+        domains_topics.append(topics)
+
+    db_session.commit()
+    return domains_topics
+
+
+def test_get_next_topic_id_retorna_proximo_topico_do_mesmo_dominio(db_session):
+    [[topic_a, topic_b]] = _seed_trilha(db_session, topics_per_domain=[["A", "B"]])
+
+    assert catalog.get_next_topic_id(db_session, topic_a.id) == topic_b.id
+
+
+def test_get_next_topic_id_pula_para_primeiro_topico_do_proximo_dominio(db_session):
+    [[topic_a], [topic_b, _topic_c]] = _seed_trilha(
+        db_session, topics_per_domain=[["A"], ["B", "C"]]
+    )
+
+    assert catalog.get_next_topic_id(db_session, topic_a.id) == topic_b.id
+
+
+def test_get_next_topic_id_retorna_none_no_ultimo_topico_da_trilha(db_session):
+    [[_topic_a], [_topic_b, topic_c]] = _seed_trilha(
+        db_session, topics_per_domain=[["A"], ["B", "C"]]
+    )
+
+    assert catalog.get_next_topic_id(db_session, topic_c.id) is None
+
+
 # --- srs_state ---------------------------------------------------------------------
 
 
@@ -149,7 +221,11 @@ def test_srs_state_save_e_get_or_default_fazem_roundtrip(db_session):
     assert default_state.interval_days == 0
 
     new_state = UserQuestionState(
-        user_id=user_id, question_id=question.id, repetition_count=1, ease_factor=2.5, interval_days=1
+        user_id=user_id,
+        question_id=question.id,
+        repetition_count=1,
+        ease_factor=2.5,
+        interval_days=1,
     )
     reviewed_at = datetime(2026, 8, 9, 12, 0, 0)
     saved = srs_state.save(db_session, new_state, last_reviewed_at=reviewed_at)
@@ -172,7 +248,12 @@ def test_count_questions_seen(db_session):
 
     srs_state.save(
         db_session,
-        UserQuestionState(user_id=user_id, question_id=question.id, repetition_count=1, interval_days=1),
+        UserQuestionState(
+            user_id=user_id,
+            question_id=question.id,
+            repetition_count=1,
+            interval_days=1,
+        ),
         last_reviewed_at=datetime.now(timezone.utc),
     )
 
@@ -205,7 +286,10 @@ def test_lesson_session_create_e_complete(db_session):
     user_id = uuid.uuid4()
 
     session = lesson_sessions.create(
-        db_session, user_id=user_id, topic_id=topic.id, started_at=datetime.now(timezone.utc)
+        db_session,
+        user_id=user_id,
+        topic_id=topic.id,
+        started_at=datetime.now(timezone.utc),
     )
     assert session.completed_at is None
 

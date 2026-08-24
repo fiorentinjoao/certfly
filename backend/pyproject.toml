@@ -16,6 +16,10 @@ dependencies = [
 dev = [
     "pytest>=8.3",
     "httpx>=0.27",
+    # Usado por scripts/seed_dev.py pra carregar content/*.yaml — vinha
+    # como transitiva de outra dependência, mas o script agora depende
+    # dela diretamente (ver docs/content-plan.md).
+    "pyyaml>=6.0",
 ]
 
 [tool.pytest.ini_options]

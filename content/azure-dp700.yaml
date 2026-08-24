@@ -1,0 +1,304 @@
+# Conteúdo (domínios/tópicos/perguntas) do Azure — Fabric Data Engineer
+# Associate (DP-700). Estrutura de domínios segue o study guide oficial
+# (https://learn.microsoft.com/credentials/certifications/resources/study-guides/dp-700),
+# skills measured em 21/07/2026.
+#
+# Substitui a DP-203 (Azure Data Engineer Associate), aposentada pela
+# Microsoft em março/2025 — ver docs/product-spec.md.
+#
+# Perguntas são escritas do zero pela equipe do CertFly — nunca copiadas de
+# bancos de questões reais (ver aviso legal em docs/content-plan.md).
+
+provider:
+  name: Microsoft Azure
+  slug: azure
+
+certification:
+  name: Fabric Data Engineer Associate
+  slug: azure-dp700
+
+domains:
+  - name: Ingest and transform data
+    slug: ingest-transform-data
+    weight_pct: 32
+    order: 2
+    topics:
+      - name: Padrões de carga (full e incremental)
+        slug: padroes-carga
+        order: 1
+        questions:
+          - prompt: >-
+              Uma tabela de origem tem bilhões de linhas e recebe poucas
+              mudanças por dia. Qual padrão de carga é o mais eficiente
+              para manter o destino atualizado, evitando reprocessar a
+              tabela inteira a cada execução?
+            choices:
+              - text: Carga incremental
+                correct: true
+                explanation: >-
+                  Carga incremental processa só os registros novos/
+                  alterados desde a última execução — evita reprocessar
+                  bilhões de linhas que não mudaram.
+              - text: Carga completa (full load)
+                correct: false
+                explanation: >-
+                  Carga completa reprocessa a tabela inteira a cada
+                  execução — exatamente o custo que o cenário pede pra
+                  evitar.
+              - text: Carga completa, mas rodando só uma vez por mês
+                correct: false
+                explanation: >-
+                  Reduzir a frequência não resolve o problema de
+                  eficiência por execução, e ainda piora a atualidade dos
+                  dados no destino.
+              - text: Excluir e recriar a tabela de destino a cada execução
+                correct: false
+                explanation: >-
+                  Isso é uma forma de carga completa disfarçada — ainda
+                  reprocessa tudo, além de gerar indisponibilidade da
+                  tabela durante a recriação.
+
+      - name: Ingestão e transformação batch
+        slug: ingestao-transformacao-batch
+        order: 2
+        questions:
+          - prompt: >-
+              No Microsoft Fabric, qual recurso permite referenciar dados
+              que já existem em outro workspace ou fonte externa dentro do
+              OneLake, sem copiar fisicamente os dados?
+            choices:
+              - text: OneLake shortcut
+                correct: true
+                explanation: >-
+                  Shortcuts no OneLake criam uma referência lógica a dados
+                  que residem em outro lugar (outro workspace, ADLS, S3,
+                  etc.), sem duplicar o armazenamento físico.
+              - text: Dataflow Gen2
+                correct: false
+                explanation: >-
+                  Dataflow Gen2 é uma ferramenta de transformação de dados
+                  (ETL low-code), não um mecanismo de referência sem cópia
+                  entre locais de armazenamento.
+              - text: Mirroring
+                correct: false
+                explanation: >-
+                  Mirroring replica continuamente dados de um banco externo
+                  (ex: Cosmos DB, SQL) para dentro do Fabric — envolve
+                  sincronização contínua, diferente de uma referência
+                  lógica direta como o shortcut.
+              - text: Pipeline de cópia (Copy Activity)
+                correct: false
+                explanation: >-
+                  Copy Activity move/copia dados fisicamente de um lugar
+                  para outro — o oposto de uma referência sem cópia.
+
+          - prompt: >-
+              Para transformar dados usando lógica complexa em PySpark
+              dentro de um pipeline de engenharia de dados no Fabric, qual
+              item é o mais indicado?
+            choices:
+              - text: Notebook
+                correct: true
+                explanation: >-
+                  Notebooks no Fabric suportam PySpark diretamente,
+                  permitindo lógica de transformação complexa com código,
+                  integrados a pipelines de orquestração.
+              - text: Dataflow Gen2 exclusivamente
+                correct: false
+                explanation: >-
+                  Dataflow Gen2 é voltado a transformações low-code/
+                  visuais (Power Query) — para lógica complexa em PySpark,
+                  o notebook é o encaixe direto.
+              - text: KQL Queryset
+                correct: false
+                explanation: >-
+                  KQL Queryset é usado para consultar dados no Eventhouse
+                  (Real-Time Intelligence) usando Kusto Query Language, não
+                  para rodar transformações em PySpark.
+              - text: Semantic model
+                correct: false
+                explanation: >-
+                  Semantic model é a camada de modelagem para consumo em
+                  relatórios/Power BI — não é onde se escreve lógica de
+                  transformação em PySpark.
+
+      - name: Ingestão e transformação streaming
+        slug: ingestao-transformacao-streaming
+        order: 3
+        questions:
+          - prompt: >-
+              Qual item do Microsoft Fabric é o ponto de entrada padrão
+              para processar dados de streaming em tempo real (ex: eventos
+              de IoT), antes de armazená-los em um Eventhouse?
+            choices:
+              - text: Eventstream
+                correct: true
+                explanation: >-
+                  Eventstream é o recurso do Fabric feito para capturar,
+                  transformar e rotear dados de streaming em tempo real,
+                  incluindo o envio para um Eventhouse.
+              - text: Dataflow Gen2
+                correct: false
+                explanation: >-
+                  Dataflow Gen2 é voltado a transformação de dados batch
+                  low-code — não é o componente de captura de streaming em
+                  tempo real do Fabric.
+              - text: Lakehouse
+                correct: false
+                explanation: >-
+                  Lakehouse é um destino de armazenamento (tabelas
+                  Delta) — não é o componente responsável por capturar o
+                  streaming em si.
+              - text: Semantic model
+                correct: false
+                explanation: >-
+                  Semantic model é a camada de consumo analítico — não
+                  processa ingestão de streaming.
+
+  - name: Implement and manage an analytics solution
+    slug: implement-manage-analytics
+    weight_pct: 32
+    order: 1
+    topics:
+      - name: Segurança e governança
+        slug: seguranca-governanca
+        order: 1
+        questions:
+          - prompt: >-
+              Uma organização precisa que usuários vejam apenas as linhas
+              de uma tabela correspondentes à sua própria região de vendas,
+              mesmo tendo acesso de leitura à tabela inteira. Qual recurso
+              do Fabric implementa isso?
+            choices:
+              - text: Segurança em nível de linha (row-level security)
+                correct: true
+                explanation: >-
+                  Row-level security filtra automaticamente quais linhas
+                  cada usuário enxerga com base em regras definidas,
+                  mesmo com a mesma permissão de tabela para todos.
+              - text: Controle de acesso em nível de workspace
+                correct: false
+                explanation: >-
+                  Controle no nível de workspace define quem acessa o
+                  workspace como um todo — não filtra linhas específicas
+                  dentro de uma mesma tabela.
+              - text: Sensitivity labels
+                correct: false
+                explanation: >-
+                  Sensitivity labels classificam a sensibilidade de um item
+                  (para governança/compliance), mas não implementam
+                  filtragem de linhas por usuário.
+              - text: Dynamic data masking
+                correct: false
+                explanation: >-
+                  Data masking oculta/ofusca valores de colunas específicas
+                  para certos usuários — não filtra quais linhas inteiras
+                  são exibidas.
+
+      - name: Orquestração de processos
+        slug: orquestracao-processos
+        order: 2
+        questions:
+          - prompt: >-
+              Uma solução no Fabric precisa iniciar um pipeline
+              automaticamente assim que um arquivo novo chega em uma pasta
+              monitorada, em vez de rodar em um horário fixo. Qual
+              mecanismo de disparo atende esse requisito?
+            choices:
+              - text: Gatilho orientado a evento (event-based trigger)
+                correct: true
+                explanation: >-
+                  Gatilhos orientados a evento disparam a execução em
+                  resposta a uma ocorrência específica (como a chegada de
+                  um arquivo), em vez de esperar um horário agendado.
+              - text: Agendamento fixo (schedule) diário
+                correct: false
+                explanation: >-
+                  Um agendamento fixo roda em horários pré-definidos,
+                  independente de quando o arquivo realmente chega — não
+                  atende ao requisito de reagir à chegada do arquivo.
+              - text: Execução manual pelo usuário
+                correct: false
+                explanation: >-
+                  Execução manual não é automática — o cenário
+                  explicitamente pede disparo automático.
+              - text: Deployment pipeline
+                correct: false
+                explanation: >-
+                  Deployment pipelines promovem itens entre estágios
+                  (dev/test/prod) do Fabric — não são o mecanismo de
+                  disparo de execução de pipeline de dados por evento.
+
+  - name: Monitor and optimize an analytics solution
+    slug: monitor-optimize-analytics
+    weight_pct: 32
+    order: 3
+    topics:
+      - name: Monitoramento de itens Fabric
+        slug: monitoramento-itens
+        order: 1
+        questions:
+          - prompt: >-
+              Qual é a forma correta de identificar rapidamente que a
+              atualização (refresh) de um semantic model falhou na última
+              execução agendada, sem precisar abrir cada item manualmente
+              para checar?
+            choices:
+              - text: Configurar um alerta de monitoramento
+                correct: true
+                explanation: >-
+                  Alertas de monitoramento notificam automaticamente
+                  quando um refresh ou execução falha, evitando checagem
+                  manual item por item.
+              - text: Aumentar a frequência do agendamento de refresh
+                correct: false
+                explanation: >-
+                  Rodar com mais frequência não resolve detecção de falha —
+                  só aumenta a chance de rodar de novo sem saber que a
+                  execução anterior falhou.
+              - text: Recriar o semantic model do zero
+                correct: false
+                explanation: >-
+                  Recriar o item não é uma estratégia de monitoramento —
+                  é uma ação corretiva desproporcional e que nem resolve
+                  detecção de falhas futuras.
+              - text: Exportar os dados para Excel periodicamente
+                correct: false
+                explanation: >-
+                  Isso não monitora nada — apenas cria uma cópia estática
+                  dos dados, sem visibilidade sobre falhas de execução.
+
+      - name: Otimização de performance
+        slug: otimizacao-performance
+        order: 2
+        questions:
+          - prompt: >-
+              Uma tabela Delta em um Lakehouse do Fabric acumulou muitos
+              arquivos pequenos ao longo do tempo, degradando a performance
+              de leitura. Qual operação de otimização resolve isso ao
+              compactar os arquivos em arquivos maiores?
+            choices:
+              - text: OPTIMIZE (compactação de arquivos Delta)
+                correct: true
+                explanation: >-
+                  O comando OPTIMIZE compacta arquivos pequenos em arquivos
+                  maiores dentro de uma tabela Delta, melhorando a
+                  performance de leitura.
+              - text: Aumentar o número de partições
+                correct: false
+                explanation: >-
+                  Mais partições tende a piorar o problema de arquivos
+                  pequenos, não resolvê-lo — cada partição extra pode gerar
+                  mais arquivos ainda menores.
+              - text: Desabilitar o log de transações Delta
+                correct: false
+                explanation: >-
+                  O log de transações é essencial ao formato Delta (garante
+                  ACID); desabilitá-lo não é uma operação válida nem
+                  resolveria fragmentação de arquivos.
+              - text: Migrar a tabela para formato CSV
+                correct: false
+                explanation: >-
+                  CSV não tem os recursos de otimização (nem o log
+                  transacional) do Delta — seria um passo atrás, não uma
+                  otimização.

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/answer.dart';
+import '../models/certification.dart';
 import '../models/lesson.dart';
 import '../models/lesson_summary.dart';
 import '../models/me.dart';
@@ -79,4 +80,15 @@ class ApiClient {
   Future<LessonSummary> completeLessonSession(String sessionId) async => LessonSummary.fromJson(
     await _postJson('/lesson-session/$sessionId/complete'),
   );
+
+  /// GET /certifications — lista as certificações disponíveis com a %
+  /// de domínio geral do usuário em cada uma.
+  Future<List<CertificationOverview>> getCertifications() async {
+    final response = await _http.get(_uri('/certifications'), headers: _headers);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw ApiException(response.statusCode, response.body);
+    }
+    final list = jsonDecode(response.body) as List;
+    return list.map((c) => CertificationOverview.fromJson(c as Map<String, dynamic>)).toList();
+  }
 }
