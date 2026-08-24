@@ -1,0 +1,82 @@
+certification: gcp-pde
+domain_slug: maintaining-automating-workloads
+topic_slug: monitoramento-troubleshooting
+questions:
+  - prompt: Um engenheiro de dados quer investigar, via SQL, o consumo de armazenamento
+      de todas as tabelas de um dataset do BigQuery para identificar quais tabelas
+      estão custando mais em storage. Qual view do INFORMATION_SCHEMA foi feita
+      especificamente para esse tipo de análise?
+    source_url: https://cloud.google.com/bigquery/docs/information-schema-intro
+    verified: true
+    choices:
+      - text: TABLE_STORAGE
+        correct: true
+        explanation: A documentação lista TABLE_STORAGE entre as views de "Table
+          & Storage Analysis" do INFORMATION_SCHEMA, descrita especificamente para
+          consumo de armazenamento (storage consumption).
+      - text: JOBS_BY_USER
+        correct: false
+        explanation: A documentação descreve JOBS_BY_USER como uma view de monitoramento
+          de jobs filtrada por usuário, não como uma view voltada ao consumo de
+          armazenamento de tabelas.
+      - text: OBJECT_PRIVILEGES
+        correct: false
+        explanation: A documentação descreve OBJECT_PRIVILEGES como uma view de
+          auditoria de controle de acesso, não de consumo de armazenamento.
+      - text: ROUTINES
+        correct: false
+        explanation: A documentação descreve ROUTINES como uma view de metadados
+          de procedures/functions, sem relação com consumo de armazenamento de tabelas.
+  - prompt: Um time de FinOps quer investigar, via SQL, quais usuários rodaram
+      os jobs mais caros no BigQuery em um determinado período, para uma auditoria
+      de custos. Qual categoria de views do INFORMATION_SCHEMA foi desenhada para
+      esse tipo de investigação?
+    source_url: https://cloud.google.com/bigquery/docs/information-schema-intro
+    verified: true
+    choices:
+      - text: As views de monitoramento de jobs, como JOBS e JOBS_BY_USER
+        correct: true
+        explanation: A documentação agrupa JOBS, JOBS_BY_USER, JOBS_BY_FOLDER e
+          JOBS_BY_ORGANIZATION como views de "Jobs Monitoring", incluindo filtragem
+          de jobs por usuário — exatamente o tipo de investigação de auditoria de
+          custo por usuário descrita no cenário.
+      - text: As views de reservas e capacidade, como RESERVATIONS e CAPACITY_COMMITMENTS
+        correct: false
+        explanation: A documentação descreve essas views como voltadas à alocação
+          de recursos (reservas e compromissos de capacidade), não ao rastreamento
+          de jobs por usuário.
+      - text: As views de estrutura de dados, como SCHEMATA e COLUMNS
+        correct: false
+        explanation: A documentação descreve SCHEMATA e COLUMNS como views de metadados
+          de estrutura de datasets/colunas, não de rastreamento de jobs por usuário.
+      - text: As views de índices, como SEARCH_INDEXES e VECTOR_INDEXES
+        correct: false
+        explanation: A documentação descreve essas views como voltadas à configuração
+          de índices de busca/vetoriais, sem relação com auditoria de jobs por usuário.
+  - prompt: Um time de SRE quer criar um gráfico que acompanhe a tendência de
+      latência de uma aplicação ao longo do tempo, organizando os valores de tempo
+      de resposta em um histograma, usando o Cloud Logging. Qual tipo de métrica
+      baseada em log atende a essa necessidade?
+    source_url: https://cloud.google.com/logging/docs/overview
+    verified: true
+    choices:
+      - text: Métrica de distribuição (distribution metric)
+        correct: true
+        explanation: A documentação descreve métricas de distribuição como aquelas
+          que "extraem e organizam dados como tempos de resposta em histogramas",
+          citando observar tendências de latência como um dos usos.
+      - text: Métrica de contador (counter metric)
+        correct: false
+        explanation: A documentação descreve métricas de contador como aquelas que
+          "contam entradas de log que correspondem a critérios específicos" — úteis
+          para contagem de erros, não para organizar tempos de resposta em histogramas.
+      - text: Um log sink apontando para o BigQuery
+        correct: false
+        explanation: A documentação descreve sinks como o mecanismo de roteamento
+          de logs para destinos como BigQuery, Cloud Storage ou Pub/Sub — não é
+          o mecanismo de criação de métricas de histograma de latência.
+      - text: Uma política de alerta baseada em log
+        correct: false
+        explanation: A documentação descreve alertas baseados em log como notificações
+          quando padrões ou tendências específicas aparecem nos logs, não como o
+          mecanismo que organiza tempos de resposta em um histograma.

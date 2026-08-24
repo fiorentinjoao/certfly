@@ -21,7 +21,7 @@ candidato assina ao fazer a prova.
 | 2. Ingesting and processing the data (~25%) | Planejamento de Pipelines · Construção de Pipelines (batch/streaming) · Deploy e Operacionalização de Pipelines |
 | 3. Storing the data (~20%) | Seleção de Sistema de Armazenamento · Data Warehouse (modelagem) · Data Lake · Design de Plataforma de Dados |
 | 4. Preparing and using data for analysis (~15%) | Preparação para Visualização (BI) · Preparação para IA/ML · Compartilhamento de Dados |
-| 5. Maintaining and automating data workloads (~18%) | Otimização de Recursos · Automação e Repetibilidade *(guia tem mais itens em 5.x que ainda não detalhei — completo na hora de escrever)* |
+| 5. Maintaining and automating data workloads (~18%) | Otimização de Recursos · Automação e Repetibilidade · Organização de Workloads · Monitoramento e Troubleshooting · Consciência de Falhas e Mitigação de Impacto *(estrutura completa confirmada via `pdftotext` do exam guide oficial em 2026-08-24 — tem 5.1 a 5.5, não só 2 itens como a suposição anterior)* |
 
 **Já existe hoje**: domínio "Storing Data" com o tópico "BigQuery" (3 perguntas seed).
 

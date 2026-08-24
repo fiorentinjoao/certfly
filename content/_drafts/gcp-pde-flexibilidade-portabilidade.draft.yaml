@@ -1,0 +1,94 @@
+certification: gcp-pde
+domain_slug: designing-data-processing
+topic_slug: flexibilidade-portabilidade
+questions:
+  - prompt: Uma organização tem dados espalhados entre BigQuery, Cloud Storage,
+      Spanner, AlloyDB e um banco Oracle on-premises, e quer descoberta e governança
+      centralizadas desses dados sem precisar migrar tudo para um único sistema
+      de armazenamento. Qual produto do Google Cloud foi desenhado para esse cenário?
+    source_url: https://cloud.google.com/dataplex/docs/introduction
+    verified: true
+    choices:
+      - text: Dataplex (atualmente também chamado de Knowledge Catalog)
+        correct: true
+        explanation: A documentação descreve o Dataplex (renomeado para Knowledge
+          Catalog) como um catálogo que "ingere metadados" de BigQuery, Cloud Storage,
+          Spanner, AlloyDB for PostgreSQL, Cloud SQL, Pub/Sub e Vertex AI, além de
+          conectores de terceiros como Oracle, fornecendo contexto e governança
+          unificados sem exigir migração dos dados para um único sistema.
+      - text: BigQuery Data Transfer Service
+        correct: false
+        explanation: O BigQuery Data Transfer Service automatiza a movimentação
+          de dados para dentro do BigQuery a partir de fontes específicas — ele
+          não oferece descoberta e governança centralizada de dados que continuam
+          espalhados em múltiplos sistemas.
+      - text: Database Migration Service
+        correct: false
+        explanation: O Database Migration Service migra bancos de dados de origem
+          (como MySQL) para destinos no Cloud SQL — seu objetivo é mover dados,
+          não catalogar e governar dados que permanecem distribuídos entre sistemas
+          diferentes.
+      - text: Cloud KMS
+        correct: false
+        explanation: Cloud KMS gerencia chaves criptográficas; não tem relação com
+          descoberta, catalogação ou governança de dados distribuídos entre sistemas
+          de armazenamento diferentes.
+  - prompt: Uma equipe de dados quer que o catálogo de dados descubra automaticamente
+      metadados de um banco Oracle on-premises e de um SQL Server hospedado em
+      outra nuvem, sem precisar escrever um conector customizado do zero. Segundo
+      a documentação, isso é possível?
+    source_url: https://cloud.google.com/dataplex/docs/introduction
+    verified: true
+    choices:
+      - text: Sim — o Dataplex/Knowledge Catalog suporta conectores de terceiros
+          para Oracle, MySQL, PostgreSQL e SQL Server via pipelines de conectividade
+          gerenciados
+        correct: true
+        explanation: A documentação afirma explicitamente que o sistema "também
+          suporta conectores de banco de dados de terceiros (Oracle, MySQL, PostgreSQL,
+          SQL Server) e fontes customizadas por meio de pipelines de conectividade
+          gerenciados."
+      - text: Não — o catálogo só ingere metadados de serviços nativos do Google
+          Cloud, como BigQuery e Cloud Storage
+        correct: false
+        explanation: A documentação lista explicitamente conectores de terceiros
+          para Oracle, MySQL, PostgreSQL e SQL Server, além dos serviços nativos
+          do Google Cloud — a afirmação de que só suporta fontes nativas está incorreta.
+      - text: Só é possível para bancos MySQL, nenhum outro banco de terceiros é
+          suportado
+        correct: false
+        explanation: A documentação lista quatro bancos de terceiros suportados
+          por conectores (Oracle, MySQL, PostgreSQL, SQL Server), não apenas MySQL.
+      - text: Não — é necessário primeiro migrar os dados desses bancos para o BigQuery
+        correct: false
+        explanation: A documentação descreve conectores que ingerem metadados diretamente
+          das fontes de terceiros; não exige migração prévia dos dados para o BigQuery.
+  - prompt: O Dataplex foi renomeado para Knowledge Catalog. Uma equipe que já
+      tem pipelines e automações usando a API, a CLI e papéis do IAM do Dataplex
+      configurados precisa saber se essa mudança de nome vai quebrar sua automação
+      existente. O que a documentação afirma sobre isso?
+    source_url: https://cloud.google.com/dataplex/docs/introduction
+    verified: true
+    choices:
+      - text: A API, a biblioteca cliente, a CLI e os nomes de IAM permanecem inalterados,
+          e implantações existentes continuam operacionais sem migração manual
+        correct: true
+        explanation: A documentação afirma que, apesar da renomeação para Knowledge
+          Catalog, "a API, a biblioteca cliente, a CLI e os nomes de IAM permanecem
+          inalterados" e que "implantações, APIs e configurações existentes do Dataplex
+          continuam operacionais", sem exigir migração manual.
+      - text: Todos os papéis do IAM precisam ser recriados com o prefixo "knowledgecatalog"
+        correct: false
+        explanation: A documentação afirma o oposto — os nomes de IAM permanecem
+          inalterados após a renomeação, então não é necessário recriar papéis.
+      - text: A API muda de nome e todas as integrações programáticas precisam ser
+          reescritas
+        correct: false
+        explanation: A documentação afirma explicitamente que a API permanece inalterada
+          apesar da renomeação do produto, portanto integrações existentes não precisam
+          ser reescritas por causa do rebranding.
+      - text: É necessário migrar manualmente cada configuração existente para o
+          novo produto antes de continuar usando o serviço
+        correct: false
+        explanation: A documentação afirma que não é necessária migração manual
+          — implantações existentes continuam operacionais normalmente após a renomeação.

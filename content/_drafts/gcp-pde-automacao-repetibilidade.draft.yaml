@@ -1,0 +1,87 @@
+certification: gcp-pde
+domain_slug: maintaining-automating-workloads
+topic_slug: automacao-repetibilidade
+questions:
+  - prompt: Um engenheiro de dados está escrevendo uma DAG no Cloud Composer
+      e pensa em colocar um workflow inteiro de extração, transformação e carga
+      dentro de uma única task Python, para simplificar o código. Essa abordagem
+      segue a boa prática recomendada pela documentação?
+    source_url: https://cloud.google.com/composer/docs/composer-2/write-dags
+    verified: true
+    choices:
+      - text: Não — cada task deve ser uma unidade de trabalho idempotente, e a documentação
+          orienta evitar encapsular um workflow de múltiplas etapas em uma única
+          task
+        correct: true
+        explanation: A documentação afirma que "cada task deve ser uma unidade de
+          trabalho idempotente" e orienta explicitamente "evitar encapsular um workflow
+          de múltiplas etapas dentro de uma única task."
+      - text: Sim — colocar o workflow inteiro em uma task reduz a complexidade do
+          grafo de dependências e é a prática recomendada
+        correct: false
+        explanation: A documentação recomenda o oposto — dividir o trabalho em
+          tasks idempotentes e evitar concentrar um workflow de múltiplas etapas
+          em uma única task.
+      - text: Sim, desde que a task use o operador PythonOperator
+        correct: false
+        explanation: A documentação não condiciona essa prática ao operador usado
+          — ela orienta de forma geral evitar encapsular múltiplas etapas em uma
+          única task, independente do tipo de operador.
+      - text: A documentação não tem recomendação sobre esse ponto
+        correct: false
+        explanation: A documentação trata esse ponto explicitamente, recomendando
+          tasks como unidades de trabalho idempotentes e evitando múltiplas etapas
+          em uma task só.
+  - prompt: Uma DAG no Cloud Composer está falhando ocasionalmente por instabilidades
+      transitórias de rede ao chamar uma API externa, mas o time não quer que
+      o job inteiro seja marcado como falho por causa disso. Segundo a documentação,
+      qual configuração ajuda a evitar que a DAG inteira falhe nesses casos?
+    source_url: https://cloud.google.com/composer/docs/composer-2/write-dags
+    verified: true
+    choices:
+      - text: Configurar default_task_retries com um valor diferente de zero, habilitando
+          retentativas de task
+        correct: true
+        explanation: A documentação recomenda "sobrescrever a configuração default_task_retries
+          com um valor diferente de zero" para habilitar retentativas de task e
+          evitar que a DAG inteira falhe por instabilidades transitórias; deixar
+          o valor em 0 desabilita as retentativas.
+      - text: Deixar default_task_retries configurado como 0
+        correct: false
+        explanation: A documentação afirma que configurar retries como 0 desabilita
+          as tentativas de retry — é o oposto do que ajudaria a lidar com falhas
+          transitórias.
+      - text: Colocar várias DAGs no mesmo módulo Python para compartilhar estado
+        correct: false
+        explanation: A documentação recomenda evitar colocar múltiplos objetos DAG
+          em um único módulo Python por questões de tolerância a falhas — isso não
+          tem relação com retentativas de task após falhas transitórias.
+      - text: Reduzir o número de arquivos na pasta /dags para um único arquivo
+        correct: false
+        explanation: A documentação discute consolidar DAGs em menos arquivos como
+          uma prática de performance de parsing, não como o mecanismo para lidar
+          com falhas transitórias de rede em uma task — isso é função das retentativas.
+  - prompt: Um engenheiro está definindo o start_date de uma nova DAG no Cloud
+      Composer e cogita usar datetime.now() para que o valor seja sempre a data
+      atual no momento em que o Airflow processa o arquivo. Isso é recomendado
+      pela documentação?
+    source_url: https://cloud.google.com/composer/docs/composer-2/write-dags
+    verified: true
+    choices:
+      - text: Não — start_date deve ser um ponto fixo no tempo, não um valor dinâmico
+        correct: true
+        explanation: A documentação afirma que "start_date descreve quando uma DAG
+          é válida / pode ser executada. Defina isso como um ponto fixo no tempo,
+          em vez de dinamicamente" — usar datetime.now() contraria essa orientação.
+      - text: Sim — usar datetime.now() é a forma recomendada de definir start_date
+        correct: false
+        explanation: A documentação orienta o oposto — start_date deve ser fixo,
+          não calculado dinamicamente a cada parse do arquivo.
+      - text: Sim, mas apenas em DAGs com agendamento manual (schedule_interval=None)
+        correct: false
+        explanation: A documentação não faz essa distinção por tipo de agendamento
+          — a orientação de usar um ponto fixo no tempo para start_date é geral.
+      - text: A documentação não recomenda nada específico sobre como definir start_date
+        correct: false
+        explanation: A documentação é explícita sobre esse ponto, orientando que
+          start_date seja fixado em vez de definido dinamicamente.

@@ -1,0 +1,86 @@
+certification: gcp-pde
+domain_slug: maintaining-automating-workloads
+topic_slug: otimizacao-recursos
+questions:
+  - prompt: Uma equipe roda jobs de processamento em lote no Dataproc apenas
+      algumas horas por dia e quer reduzir o custo do cluster sem abrir mão do
+      Spark. Segundo a documentação, quais duas práticas ajudam a reduzir custo
+      nesse cenário?
+    source_url: https://cloud.google.com/dataproc/docs/concepts/overview
+    verified: true
+    choices:
+      - text: Usar instâncias preemptivas e configurar exclusão/parada agendada do
+          cluster
+        correct: true
+        explanation: A documentação lista o suporte a instâncias preemptivas para
+          redução adicional de custo e menciona exclusão e parada agendada de cluster
+          entre os recursos de automação do serviço — ambos reduzem o custo de clusters
+          usados só parte do dia.
+      - text: Manter o cluster sempre ativo em tamanho fixo, sem autoscaling
+        correct: false
+        explanation: A documentação lista autoscaling como um dos recursos de automação
+          do serviço voltado a ajustar o cluster à demanda — manter um cluster fixo
+          sempre ativo vai contra a otimização de custo para uso não contínuo.
+      - text: Usar exclusivamente clusters de nó único (single-node) em produção
+        correct: false
+        explanation: A documentação lista clusters single-node como um tipo de configuração
+          disponível, mas não como a prática recomendada geral para reduzir custo
+          — instâncias preemptivas e desligamento agendado são os mecanismos de
+          custo citados.
+      - text: Migrar o processamento para fora do Dataproc, pois não há cobrança
+          por segundo
+        correct: false
+        explanation: A documentação afirma que o Dataproc usa "cobrança por segundo,
+          com cobrança mínima de um minuto" — ou seja, já tem granularidade fina
+          de billing, ao contrário do que a alternativa sugere.
+  - prompt: Um time de engenharia precisa provisionar um cluster Dataproc efêmero
+      para rodar um job pontual e quer saber quanto tempo, em média, leva para
+      o cluster ficar pronto para uso segundo a documentação.
+    source_url: https://cloud.google.com/dataproc/docs/concepts/overview
+    verified: true
+    choices:
+      - text: Em média, 90 segundos ou menos
+        correct: true
+        explanation: A documentação afirma que operações de cluster (criação, escalonamento,
+          desligamento) levam "90 segundos ou menos, em média", o que viabiliza
+          o uso de clusters efêmeros para jobs pontuais.
+      - text: Em média, 30 minutos
+        correct: false
+        explanation: A documentação cita um tempo médio de 90 segundos ou menos
+          para operações de cluster, muito abaixo dos 30 minutos.
+      - text: Em média, 10 minutos
+        correct: false
+        explanation: O valor citado na documentação para operações de cluster (criação,
+          escalonamento, desligamento) é de 90 segundos ou menos em média, não 10
+          minutos.
+      - text: Não há um tempo médio documentado, varia sem previsibilidade
+        correct: false
+        explanation: A documentação especifica um tempo médio concreto — 90 segundos
+          ou menos — para as operações de cluster, contradizendo a ideia de que
+          não há valor documentado.
+  - prompt: Uma equipe quer que o tamanho de um cluster Dataproc se ajuste automaticamente
+      conforme a carga de trabalho varia ao longo do dia, sem intervenção manual
+      de um administrador. Qual recurso do Dataproc atende a essa necessidade?
+    source_url: https://cloud.google.com/dataproc/docs/concepts/overview
+    verified: true
+    choices:
+      - text: Autoscaling
+        correct: true
+        explanation: A documentação lista o autoscaling entre os recursos de automação
+          do Dataproc, junto com gerenciamento automático de cluster sem envolvimento
+          de administrador.
+      - text: Cluster de alta disponibilidade (high-availability)
+        correct: false
+        explanation: A documentação descreve clusters de alta disponibilidade como
+          uma configuração de cluster voltada a resiliência/disponibilidade, não
+          como o mecanismo de ajuste automático de tamanho conforme a carga.
+      - text: Zero-scale cluster
+        correct: false
+        explanation: A documentação menciona clusters zero-scale como um tipo de
+          configuração de cluster, distinto do recurso de autoscaling que ajusta
+          o tamanho do cluster dinamicamente conforme a carga de trabalho.
+      - text: Rotação de cluster (cluster rotation)
+        correct: false
+        explanation: A documentação lista opções de rotação de cluster entre os
+          recursos de automação, mas o recurso especificamente descrito para ajuste
+          de tamanho conforme a carga é o autoscaling.

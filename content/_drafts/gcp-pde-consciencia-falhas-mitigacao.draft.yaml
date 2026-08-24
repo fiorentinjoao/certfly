@@ -1,0 +1,90 @@
+certification: gcp-pde
+domain_slug: maintaining-automating-workloads
+topic_slug: consciencia-falhas-mitigacao
+questions:
+  - prompt: Uma equipe configurou apenas read replicas para uma instância primária
+      do Cloud SQL for MySQL, pensando que isso já garante failover automático
+      em caso de queda da instância primária. Segundo a documentação, essa suposição
+      está correta?
+    source_url: https://cloud.google.com/sql/docs/mysql/replication
+    verified: true
+    choices:
+      - text: Não — read replicas não fornecem capacidade de failover; é preciso
+          configurar alta disponibilidade separadamente
+        correct: true
+        explanation: A documentação afirma explicitamente que "read replicas não
+          fornecem capacidade de failover" e orienta configurar a instância para
+          alta disponibilidade separadamente para obter failover.
+      - text: Sim — qualquer read replica pode assumir o papel de primária automaticamente
+          em caso de queda
+        correct: false
+        explanation: A documentação afirma o oposto — read replicas padrão não
+          têm capacidade de failover automático; isso exige configuração de alta
+          disponibilidade à parte.
+      - text: Sim, mas só se houver pelo menos 10 read replicas configuradas
+        correct: false
+        explanation: A documentação não condiciona failover a uma quantidade mínima
+          de read replicas — ela recomenda limitar a 10 ou menos read replicas diretas
+          por razões de capacidade, sem relação com failover.
+      - text: Sim, desde que as replicas estejam na mesma região da instância primária
+        correct: false
+        explanation: A documentação não descreve failover automático de read replicas
+          condicionado à região — ela afirma de forma geral que read replicas não
+          fornecem capacidade de failover, independente da região.
+  - prompt: Uma aplicação usa Memorystore for Redis na camada Basic Tier para
+      cache de sessão, e a equipe assume que, se o nó cair, o Memorystore promove
+      automaticamente um nó replicado sem perda de disponibilidade. Segundo a
+      documentação, essa suposição está correta?
+    source_url: https://cloud.google.com/memorystore/docs/redis/redis-overview
+    verified: true
+    choices:
+      - text: Não — a camada Basic Tier não tem replicação nem failover automático;
+          isso só existe na camada Standard Tier
+        correct: true
+        explanation: A documentação descreve a Basic Tier como um "cache sem replicação",
+          sem redundância ou failover automático — esses recursos, incluindo failover
+          automático e SLA de 99,9%, são descritos como parte da Standard Tier.
+      - text: Sim — todas as camadas do Memorystore for Redis incluem failover automático
+        correct: false
+        explanation: A documentação distingue explicitamente a Basic Tier (sem replicação)
+          da Standard Tier (com replicação e failover automático) — nem toda camada
+          oferece esse recurso.
+      - text: Sim, porque o Memorystore for Redis sempre mantém até cinco réplicas
+          por padrão, independentemente da camada
+        correct: false
+        explanation: A documentação associa "até cinco réplicas" especificamente
+          à Standard Tier, não como padrão universal de todas as camadas — a Basic
+          Tier não tem réplicas.
+      - text: Sim, desde que o snapshot RDB mais recente tenha menos de um minuto
+        correct: false
+        explanation: A documentação trata snapshots RDB como um mecanismo de persistência
+          para backup, não como condição para failover automático — a Basic Tier
+          simplesmente não oferece failover automático, independentemente da idade
+          do snapshot.
+  - prompt: Uma arquitetura de Cloud SQL for MySQL usa replicas em cascata para
+      reduzir a carga de replicação sobre a instância primária. A equipe quer
+      saber, segundo a documentação, quantos níveis de hierarquia (incluindo a
+      primária) essa topologia suporta no total.
+    source_url: https://cloud.google.com/sql/docs/mysql/replication
+    verified: true
+    choices:
+      - text: Até quatro níveis no total, incluindo a instância primária
+        correct: true
+        explanation: A documentação afirma que replicas em cascata suportam "até
+          quatro níveis no total (incluindo a primária)", com até oito replicas
+          irmãs por nível.
+      - text: Até dez níveis no total
+        correct: false
+        explanation: O limite de dez mencionado na documentação se refere ao número
+          recomendado de read replicas diretas da instância primária, não ao número
+          de níveis em uma topologia de replicas em cascata, que é de até quatro.
+      - text: Não há limite de níveis para replicas em cascata
+        correct: false
+        explanation: A documentação especifica um limite concreto de até quatro
+          níveis no total para replicas em cascata, contrariando a ideia de que
+          não há limite.
+      - text: Apenas dois níveis — a primária e um único nível de replicas
+        correct: false
+        explanation: A documentação descreve suporte a até quatro níveis no total,
+          não apenas dois, permitindo replicas em cascata com múltiplos níveis de
+          hierarquia.
