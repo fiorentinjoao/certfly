@@ -207,6 +207,27 @@ def test_primeiro_topico_do_primeiro_dominio_comeca_destravado(db_session, seed_
     assert topic_progress.mastery_pct == 0.0  # nada respondido ainda
 
 
+def test_entry_point_usa_o_menor_order_nao_o_literal_1(db_session, seed_topic):
+    # Regressão: conteúdo do GCP numera domínios pela ordem do exam guide
+    # oficial (ex: "Storing the data" é domínio 3 lá) — enquanto o domínio 1
+    # não é escrito, nenhum domínio tem order == 1. O entry point tem que
+    # ser o MENOR order existente, senão a trilha inteira fica sem ponto de
+    # entrada (ver revisão de segurança).
+    topic, _questions = seed_topic(2, domain_order=3, topic_order=1)
+    user_id = _new_user(db_session)
+    certification_id = _certification_id_of(db_session, topic)
+
+    progress = progress_service.get_certification_progress(
+        db_session, user_id, certification_id, TODAY
+    )
+    assert progress[0].topics[0].unlocked is True
+
+    # E o gate no servidor (lesson_service) tem que concordar com isso —
+    # não só a leitura de progresso.
+    lesson = lesson_service.start_lesson(db_session, user_id, topic.id, TODAY, NOW)
+    assert len(lesson.questions) == 2
+
+
 def test_mastery_reflete_questoes_ja_respondidas(db_session, seed_topic):
     topic, questions = seed_topic(2)
     question, correct_choice, _ = questions[0]

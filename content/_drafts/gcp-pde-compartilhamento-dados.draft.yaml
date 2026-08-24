@@ -1,0 +1,141 @@
+certification: gcp-pde
+domain_slug: preparing-analysis
+topic_slug: compartilhamento-dados
+
+questions:
+  - prompt: >-
+      Uma empresa assina uma listagem (listing) do Analytics Hub de outro
+      time. O que acontece com os dados compartilhados no projeto de quem
+      assinou?
+    source_url: https://cloud.google.com/bigquery/docs/analytics-hub-introduction
+    verified: true
+    choices:
+      - text: >-
+          É criado um dataset vinculado (linked dataset) no projeto do
+          assinante, SEM replicar os dados — as consultas leem os dados
+          reais em tempo real
+        correct: true
+        explanation: >-
+          Assinar uma listagem cria um linked dataset no projeto do
+          assinante sem replicar dados; graças à separação entre
+          computação e armazenamento do BigQuery, os assinantes consultam
+          tabelas e views padrão em tempo real, mas não podem
+          adicionar/atualizar objetos nesse dataset.
+      - text: Os dados são copiados integralmente pro projeto do assinante
+        correct: false
+        explanation: >-
+          O contrário — o ponto central do Analytics Hub é NÃO replicar
+          dados: o linked dataset é só um ponteiro somente-leitura pros
+          dados do publicador.
+      - text: O assinante ganha permissões de IAM diretas na tabela de origem do publicador
+        correct: false
+        explanation: >-
+          O modelo é assimétrico: o assinante consome via linked dataset,
+          sem precisar (nem ganhar) permissões de IAM diretas no dataset
+          de origem do publicador.
+      - text: Os dados só ficam disponíveis depois de um job de ETL agendado
+        correct: false
+        explanation: >-
+          Não há ETL/agendamento envolvido — a consulta acontece em tempo
+          real sobre os dados de origem, sem etapa intermediária de cópia.
+
+  - prompt: >-
+      No modelo do Analytics Hub, qual é a diferença entre uma "listagem"
+      (listing) e um "data exchange"?
+    source_url: https://cloud.google.com/bigquery/docs/analytics-hub-introduction
+    verified: true
+    choices:
+      - text: >-
+          Data exchange é o container que organiza recursos compartilhados;
+          listing é a referência a um recurso específico dentro desse
+          exchange (com descrição, queries de exemplo, documentação)
+        correct: true
+        explanation: >-
+          Um data exchange é o container onde publicadores compartilham
+          listagens e assinantes navegam e pedem acesso; dentro dele, uma
+          listing é a referência a UM recurso compartilhado específico,
+          com descrição, queries/mensagens de exemplo e instruções pro
+          assinante.
+      - text: São sinônimos — os dois termos descrevem exatamente a mesma coisa
+        correct: false
+        explanation: >-
+          Não são sinônimos: exchange é o container (pode ter várias
+          listagens dentro), listing é o item individual referenciando um
+          recurso compartilhado específico.
+      - text: Listing é privado por padrão; data exchange é sempre público
+        correct: false
+        explanation: >-
+          É o exchange que tem a opção de ser privado (só usuários
+          autorizados) ou público (todos os usuários autenticados do
+          Google Cloud) — não a listing isoladamente.
+      - text: Data exchange é exclusivo do BigQuery; listing é um recurso do Pub/Sub
+        correct: false
+        explanation: >-
+          Ambos os conceitos (exchange e listing) são do Analytics Hub —
+          não há essa separação entre BigQuery e Pub/Sub aqui.
+
+  - prompt: >-
+      Uma equipe quer compartilhar só um subconjunto de colunas/linhas de
+      uma tabela sensível do BigQuery com outro time, sem dar acesso direto
+      ao dataset de origem. Qual recurso resolve isso diretamente?
+    source_url: https://cloud.google.com/bigquery/docs/authorized-views
+    verified: true
+    choices:
+      - text: Authorized view (view autorizada)
+        correct: true
+        explanation: >-
+          Uma authorized view permite compartilhar um subconjunto de dados
+          de um dataset com usuários/grupos específicos — eles conseguem
+          ver e consultar os dados compartilhados, mas não acessam
+          diretamente o dataset de origem.
+      - text: Dar permissão de IAM de leitura direto no dataset de origem inteiro
+        correct: false
+        explanation: >-
+          Isso concede acesso ao dataset INTEIRO, não a um subconjunto —
+          exatamente o que a authorized view evita, permitindo restringir
+          a visão sem expor a origem completa.
+      - text: Exportar a tabela inteira pra um bucket do Cloud Storage e compartilhar o bucket
+        correct: false
+        explanation: >-
+          Isso duplicaria os dados fora do BigQuery e não teria a
+          granularidade de compartilhar só um subconjunto de colunas/linhas
+          controlado por uma view.
+      - text: Criar uma cópia física da tabela só com as colunas desejadas
+        correct: false
+        explanation: >-
+          Funcionaria, mas cria duplicação de dados que fica desatualizada
+          — o mecanismo direto e documentado pra esse cenário é a
+          authorized view, que não duplica dados.
+
+  - prompt: >-
+      Uma equipe quer criar uma authorized view em outro dataset pra
+      compartilhar dados de uma tabela sensível. Que restrição de
+      localização a documentação do BigQuery impõe nesse caso?
+    source_url: https://cloud.google.com/bigquery/docs/authorized-views
+    verified: true
+    choices:
+      - text: >-
+          O dataset de origem e o dataset da authorized view precisam
+          estar na MESMA localização regional
+        correct: true
+        explanation: >-
+          A documentação é explícita: ao criar uma authorized view (ou
+          authorized materialized view) em outro dataset, o dataset de
+          origem e o dataset da view autorizada precisam estar na mesma
+          localização regional.
+      - text: Não existe restrição de localização — a view pode estar em qualquer região
+        correct: false
+        explanation: >-
+          Existe sim uma restrição documentada: mesma localização regional
+          entre o dataset de origem e o dataset da authorized view.
+      - text: O dataset de origem precisa estar sempre na região us-central1
+        correct: false
+        explanation: >-
+          Não é uma região fixa exigida — a regra é que as DUAS localizações
+          (origem e view) precisam bater entre si, não que uma região
+          específica seja obrigatória.
+      - text: A restrição só se aplica a materialized views, não a views lógicas
+        correct: false
+        explanation: >-
+          A documentação aplica a mesma restrição de região tanto pra
+          authorized views quanto pra authorized materialized views.

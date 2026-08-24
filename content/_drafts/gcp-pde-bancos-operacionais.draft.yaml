@@ -1,0 +1,105 @@
+# Rascunho gerado pelo pipeline de content-gen (ver docs/content-gen-pipeline.md
+# / .claude/skills/certfly-content-gen/SKILL.md).
+
+certification: gcp-pde
+domain_slug: storing-data
+topic_slug: bancos-operacionais
+
+questions:
+  - prompt: >-
+      Uma instância do Cloud SQL configurada com alta disponibilidade (HA)
+      tem sua instância primária parando de responder. Como o Cloud SQL
+      detecta isso e o que acontece em seguida?
+    source_url: https://cloud.google.com/sql/docs/mysql/high-availability
+    verified: true
+    choices:
+      - text: >-
+          Um sistema de heartbeat verifica a cada segundo; sem múltiplos
+          heartbeats, a instância standby assume automaticamente como nova
+          primária
+        correct: true
+        explanation: >-
+          O Cloud SQL roda um heartbeat a cada segundo contra a instância
+          primária; se vários heartbeats falharem, o failover é iniciado e a
+          standby (na outra zona) assume como primária, servindo dados da
+          zona secundária.
+      - text: Um administrador precisa promover manualmente a instância standby
+        correct: false
+        explanation: >-
+          O failover é automático — só o failback (voltar a usar a
+          instância original depois que ela se recupera) precisa ser
+          disparado manualmente.
+      - text: A instância primária é recriada do zero na mesma zona
+        correct: false
+        explanation: >-
+          Não há recriação: a arquitetura HA já mantém uma standby pronta
+          replicada de forma síncrona; o failover só troca qual delas serve
+          o tráfego (via IP compartilhado).
+      - text: O Cloud SQL espera a instância primária voltar sozinha, sem failover
+        correct: false
+        explanation: >-
+          O contrário: a ausência de heartbeats é o próprio gatilho do
+          failover automático, não uma espera passiva.
+
+  - prompt: >-
+      A configuração de alta disponibilidade (HA) do Cloud SQL protege
+      contra qual tipo de falha?
+    source_url: https://cloud.google.com/sql/docs/mysql/high-availability
+    verified: true
+    choices:
+      - text: Falha de uma zona dentro da MESMA região (primária e standby em zonas diferentes)
+        correct: true
+        explanation: >-
+          A HA do Cloud SQL opera dentro de uma única região, distribuindo
+          primária e standby em zonas diferentes — não é uma configuração
+          multi-região.
+      - text: Falha de uma região inteira, com failover automático pra outra região
+        correct: false
+        explanation: >-
+          O escopo da HA é intra-região (entre zonas), não entre regiões —
+          mover uma instância entre zonas, inclusive, causa downtime.
+      - text: Apenas falhas de rede do cliente que acessa o banco
+        correct: false
+        explanation: >-
+          HA protege a disponibilidade da própria instância de banco, não
+          problemas de conectividade do lado do cliente.
+      - text: Apenas corrupção de dados causada por erro de aplicação
+        correct: false
+        explanation: >-
+          HA é sobre disponibilidade da instância (a réplica standby tem os
+          mesmos dados, incluindo erros já commitados) — não é uma proteção
+          contra erro lógico de aplicação, isso é papel de backup/point-in-time recovery.
+
+  - prompt: >-
+      O que é a "auto-columnarização" do mecanismo columnar engine do
+      AlloyDB?
+    source_url: https://cloud.google.com/alloydb/docs/columnar-engine/about
+    verified: true
+    choices:
+      - text: >-
+          O AlloyDB analisa automaticamente a carga de trabalho e adiciona
+          colunas ao column store sem intervenção manual
+        correct: true
+        explanation: >-
+          Além da seleção manual de colunas por um administrador, o
+          columnar engine oferece auto-columnarização: o sistema analisa o
+          workload e adiciona colunas ao column store sozinho, por padrão
+          usando até 30% da memória da instância pra isso.
+      - text: O AlloyDB converte automaticamente toda a tabela pra formato colunar permanente
+        correct: false
+        explanation: >-
+          Não é a tabela inteira nem permanente — o engine mantém um
+          column store separado só com colunas selecionadas (manual ou
+          automaticamente), coexistindo com o armazenamento linha-a-linha original.
+      - text: É um processo manual que exige reescrever o schema da tabela
+        correct: false
+        explanation: >-
+          É o oposto do processo manual — "auto" aqui significa
+          justamente que não exige intervenção manual de schema; a seleção
+          manual de colunas é a OUTRA opção, separada da automática.
+      - text: Serve só pra tabelas particionadas ou com poucas linhas
+        correct: false
+        explanation: >-
+          É o contrário: o columnar engine não processa diretamente
+          tabelas particionadas, tabelas externas (foreign tables) nem
+          tabelas pequenas (tipicamente abaixo de 5.000 linhas).
