@@ -6,6 +6,7 @@ import '../models/progress.dart';
 import '../theme.dart';
 import '../widgets/app_page_route.dart';
 import '../widgets/domain_path.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/streak_hero.dart';
 import 'lesson_screen.dart';
 
@@ -51,6 +52,18 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _future = _load();
+  }
+
+  @override
+  void didUpdateWidget(covariant HomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // MainShell mantém HomeScreen viva num IndexedStack — trocar a
+    // certificação ativa (CertificationsScreen) só muda a prop aqui, não
+    // recria o widget. Sem isso, a trilha continuaria mostrando os dados
+    // da certificação anterior até o usuário sair e voltar pra aba.
+    if (widget.certificationId != oldWidget.certificationId) {
+      _reload();
+    }
   }
 
   Future<_HomeData> _load() async {
@@ -105,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
         future: _future,
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
+            return const _HomeSkeleton();
           }
           if (snapshot.hasError) {
             return _ErrorState(onRetry: _reload);
@@ -134,6 +147,36 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
       ),
+    );
+  }
+}
+
+/// Esboço da Home real (StreakHero + trilha) em vez de um spinner
+/// genérico — o formato já familiar reduz a sensação de espera e evita o
+/// "pulo" brusco quando os dados chegam.
+class _HomeSkeleton extends StatelessWidget {
+  const _HomeSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 18),
+      physics: const NeverScrollableScrollPhysics(),
+      children: [
+        Skeleton(width: double.infinity, height: 84, borderRadius: BorderRadius.circular(18)),
+        const SizedBox(height: 22),
+        Skeleton(width: 160, height: 40, borderRadius: BorderRadius.circular(16)),
+        const SizedBox(height: 30),
+        for (final dx in [0.0, 46.0, -46.0]) ...[
+          Center(
+            child: Transform.translate(
+              offset: Offset(dx, 0),
+              child: const Skeleton.circle(size: 64),
+            ),
+          ),
+          const SizedBox(height: 30),
+        ],
+      ],
     );
   }
 }

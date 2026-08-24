@@ -41,6 +41,16 @@ dependencies:
   # Login real (RF-01) — e-mail/senha via Supabase Auth (ver lib/auth/).
   supabase_flutter: ^2.17.1
 
+  # Mascote animado (.lottie) na tela de resumo de lição — animação vetorial
+  # de verdade (LottieFiles, licença Simple License, uso comercial livre),
+  # em vez de transformar um PNG estático (ver lesson_summary_screen.dart).
+  lottie: ^3.3.1
+
+  # Persiste a certificação ativa escolhida em CertificationsScreen — já
+  # entrava como dependência transitiva (via supabase_flutter), agora
+  # declarada direto porque main_shell.dart passa a depender dela.
+  shared_preferences: ^2.5.5
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -72,6 +82,10 @@ flutter:
     - assets/images/mascot_hero.png
     - assets/images/mascot_face.png
     - assets/images/google_logo.png
+    # Panda animado (Lottie/dotLottie) — tela de resumo de lição
+    # (ver lesson_summary_screen.dart). "Panda Waving" by Bhaskar,
+    # LottieFiles Simple License (uso comercial livre, sem atribuição).
+    - assets/animations/panda_hero.lottie
     # Logos oficiais de provedor (GCP/AWS/Azure) — usados na aba
     # Certificações. Decisão explícita do dono, ciente do risco de uso de
     # marca registrada sem autorização (guidelines de marca de cada

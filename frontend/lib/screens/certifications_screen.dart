@@ -3,27 +3,26 @@ import 'package:flutter/material.dart';
 import '../api/api_client.dart';
 import '../models/certification.dart';
 import '../theme.dart';
+import '../widgets/skeleton.dart';
 
 /// Aba Certificações — GET /certifications (RF-02 estendido, ver
 /// docs/product-spec.md, decisão de 2026-08-10: MVP cobre 3 certificações,
 /// 1 por cloud). Mostra a % de domínio geral de cada uma que o backend já
 /// tem cadastrada.
 ///
-/// Nota: a TROCA de certificação ativa ainda não é real — o app hoje
-/// decide qual certificação mostrar via `--dart-define` (AppConfig.
-/// certificationId, fixo em tempo de build), não uma escolha persistida
-/// em runtime. Fazer isso direito exigiria guardar a escolha (ex: via
-/// shared_preferences, que hoje só entra como dependência transitiva, não
-/// declarada) e propagar isso pra Home/Lição. Por ora só sinaliza qual é
-/// a ativa; tocar numa outra não faz nada ainda.
+/// Trocar a certificação ativa aqui (`onSelect`) é persistido pelo
+/// MainShell via `ActiveCertificationStore` (shared_preferences) e
+/// propagado pra Home — ver main_shell.dart.
 class CertificationsScreen extends StatefulWidget {
   final ApiClient apiClient;
   final String activeCertificationId;
+  final ValueChanged<String> onSelect;
 
   const CertificationsScreen({
     super.key,
     required this.apiClient,
     required this.activeCertificationId,
+    required this.onSelect,
   });
 
   @override
@@ -49,7 +48,17 @@ class _CertificationsScreenState extends State<CertificationsScreen> {
         future: _future,
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
+            return ListView.separated(
+              padding: const EdgeInsets.all(16),
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: 3,
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
+              itemBuilder: (_, _) => Skeleton(
+                width: double.infinity,
+                height: 66,
+                borderRadius: BorderRadius.circular(16),
+              ),
+            );
           }
           if (snapshot.hasError) {
             return Center(
@@ -87,6 +96,7 @@ class _CertificationsScreenState extends State<CertificationsScreen> {
             itemBuilder: (context, index) => _CertificationCard(
               certification: certifications[index],
               isActive: certifications[index].id == widget.activeCertificationId,
+              onTap: () => widget.onSelect(certifications[index].id),
             ),
           );
         },
@@ -111,23 +121,33 @@ String? _logoAssetFor(String providerSlug) {
 class _CertificationCard extends StatelessWidget {
   final CertificationOverview certification;
   final bool isActive;
+  final VoidCallback onTap;
 
-  const _CertificationCard({required this.certification, required this.isActive});
+  const _CertificationCard({required this.certification, required this.isActive, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final logoAsset = _logoAssetFor(certification.providerSlug);
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isActive ? AppColors.purple.withValues(alpha: 0.12) : AppColors.surface,
-        border: Border.all(color: isActive ? AppColors.purple : AppColors.line, width: 2),
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        // Tocar numa certificação já ativa não faz nada (early-return em
+        // MainShell._onSelectCertification) — deixa o toque disponível
+        // mesmo assim, só não gera reload/gravação à toa.
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Container(
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: isActive ? AppColors.purple.withValues(alpha: 0.12) : AppColors.surface,
+            border: Border.all(color: isActive ? AppColors.purple : AppColors.line, width: 2),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              Container(
             width: 38,
             height: 38,
             padding: EdgeInsets.all(logoAsset != null ? 8 : 0),
@@ -165,7 +185,9 @@ class _CertificationCard extends StatelessWidget {
               '${(certification.overallMasteryPct * 100).round()}%',
               style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: AppColors.textDim),
             ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }
