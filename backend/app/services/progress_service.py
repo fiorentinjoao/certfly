@@ -35,17 +35,23 @@ def get_certification_progress(
         topic_progresses = []
         for topic in topics:
             snapshot = topic_mastery.compute(db, user_id, topic.id, today)
-            persisted_progress = lesson_sessions.get_topic_progress(db, user_id, topic.id)
+            persisted_progress = lesson_sessions.get_topic_progress(
+                db, user_id, topic.id
+            )
 
             # O primeiro tópico do primeiro domínio é o ponto de entrada da
             # trilha — sem isso, nenhum usuário novo teria algo destravado
             # pra começar (docs/core-loop-srs.md não cobre este caso-base
-            # explicitamente; interpretação assumida aqui).
-            is_entry_point = domain.order == 1 and topic.order == 1
+            # explicitamente; interpretação assumida aqui). Delega pra
+            # catalog.is_entry_point_topic — mesma regra usada por
+            # lesson_service.start_lesson, pra não divergir.
+            is_entry_point = catalog.is_entry_point_topic(db, topic.id)
             unlocked = persisted_progress.unlocked or is_entry_point
 
             topic_progresses.append(
-                TopicProgress(topic=topic, mastery_pct=snapshot.mastery_pct, unlocked=unlocked)
+                TopicProgress(
+                    topic=topic, mastery_pct=snapshot.mastery_pct, unlocked=unlocked
+                )
             )
         result.append(DomainProgress(domain=domain, topics=topic_progresses))
 

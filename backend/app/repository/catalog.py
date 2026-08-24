@@ -4,7 +4,7 @@ autoria de conteúdo (fora do escopo do MVP), não pela API de estudo."""
 
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models import entities
@@ -137,14 +137,32 @@ def is_entry_point_topic(db: Session, topic_id: uuid.UUID) -> bool:
     """Primeiro tópico do primeiro domínio de uma certificação — o único
     ponto de entrada da trilha que começa destravado por padrão (mesma
     regra usada em progress_service.get_certification_progress, pra não
-    haver duas definições divergentes de "entry point")."""
+    haver duas definições divergentes de "entry point").
+
+    "Primeiro" é o MENOR `order` existente, não o valor literal 1: o
+    conteúdo do GCP numera domínios pela ordem do exam guide oficial (ex:
+    "Storing the data" é domínio 3 lá), então enquanto o domínio 1 não for
+    escrito, nenhum domínio tem order == 1 — usar o literal deixaria a
+    trilha inteira sem ponto de entrada."""
     topic = db.get(TopicORM, topic_id)
     if topic is None:
         return False
     domain = db.get(DomainORM, topic.domain_id)
     if domain is None:
         return False
-    return domain.order == 1 and topic.order == 1
+
+    first_domain_order = db.scalar(
+        select(func.min(DomainORM.order)).where(
+            DomainORM.certification_id == domain.certification_id
+        )
+    )
+    if domain.order != first_domain_order:
+        return False
+
+    first_topic_order = db.scalar(
+        select(func.min(TopicORM.order)).where(TopicORM.domain_id == domain.id)
+    )
+    return topic.order == first_topic_order
 
 
 def get_topic_question_ids(db: Session, topic_id: uuid.UUID) -> list[uuid.UUID]:
