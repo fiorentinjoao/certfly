@@ -2,10 +2,41 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../theme.dart';
 import 'forgot_password_screen.dart';
+
+/// Formata o telefone enquanto o usuário digita, no padrão BR de celular:
+/// `(XX) XXXXX-XXXX` (DDD de 2 dígitos + 9 dígitos). Ignora tudo que não
+/// for dígito digitado e limita a 11 dígitos — sem depender de pacote
+/// externo de máscara.
+class _BrPhoneInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    final digits = newValue.text.replaceAll(RegExp(r'\D'), '').substring(
+      0,
+      newValue.text.replaceAll(RegExp(r'\D'), '').length > 11
+          ? 11
+          : newValue.text.replaceAll(RegExp(r'\D'), '').length,
+    );
+
+    final buffer = StringBuffer();
+    for (var i = 0; i < digits.length; i++) {
+      if (i == 0) buffer.write('(');
+      buffer.write(digits[i]);
+      if (i == 1) buffer.write(') ');
+      if (i == 6) buffer.write('-');
+    }
+
+    final formatted = buffer.toString();
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
 
 /// RF-01: formulário de e-mail/senha — entrar OU criar conta, conforme a
 /// escolha feita na WelcomeScreen (lib/screens/welcome_screen.dart), que é
@@ -36,6 +67,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  final _phoneController = TextEditingController();
 
   late bool _isSignUp;
   bool _submitting = false;
@@ -52,6 +85,8 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -82,6 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
         final response = await Supabase.instance.client.auth.signUp(
           email: email,
           password: password,
+          data: {'phone': _phoneController.text.trim()},
         );
         if (response.session == null) {
           // Confirmação de e-mail ativada no projeto — sem sessão ainda.
@@ -190,6 +226,23 @@ class _LoginScreenState extends State<LoginScreen> {
                           (value == null || !value.contains('@')) ? 'Digite um e-mail válido' : null,
                     ),
                     const SizedBox(height: 14),
+                    if (_isSignUp) ...[
+                      const SizedBox(height: 14),
+                      TextFormField(
+                        controller: _phoneController,
+                        keyboardType: TextInputType.phone,
+                        inputFormatters: [_BrPhoneInputFormatter()],
+                        decoration: const InputDecoration(
+                          labelText: 'Telefone',
+                          hintText: '(11) 91234-5678',
+                        ),
+                        validator: (value) {
+                          final digits = (value ?? '').replaceAll(RegExp(r'\D'), '');
+                          return digits.length == 11 ? null : 'Digite um telefone válido com DDD';
+                        },
+                      ),
+                    ],
+                    const SizedBox(height: 14),
                     TextFormField(
                       controller: _passwordController,
                       obscureText: true,
@@ -197,6 +250,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       validator: (value) =>
                           (value == null || value.length < 6) ? 'Mínimo de 6 caracteres' : null,
                     ),
+                    if (_isSignUp) ...[
+                      const SizedBox(height: 14),
+                      TextFormField(
+                        controller: _confirmPasswordController,
+                        obscureText: true,
+                        decoration: const InputDecoration(labelText: 'Confirmar senha'),
+                        validator: (value) =>
+                            (value != _passwordController.text) ? 'As senhas não coincidem' : null,
+                      ),
+                    ],
                     if (!_isSignUp) ...[
                       const SizedBox(height: 4),
                       Align(
