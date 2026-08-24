@@ -1,0 +1,35 @@
+# Fontes de documentação oficial para geração de conteúdo
+
+Mapa tópico → URL(s) de documentação oficial do produto, usado pela skill
+`certfly-content-gen` (`.claude/skills/certfly-content-gen/SKILL.md`) como
+grounding para gerar perguntas. Diferente do `docs/content-plan.md` (que
+mapeia a estrutura pública dos *exam guides*), este arquivo aponta pra
+documentação técnica do produto em si — a fonte de fatos verificáveis pra
+cada pergunta.
+
+Regra: só documentação oficial do produto/serviço. Nunca bancos de questões
+de certificação reais (braindumps), mesmo que apareçam numa busca.
+
+## GCP — Professional Data Engineer
+
+| Tópico (slug) | URLs oficiais |
+|---|---|
+| `bigquery` | https://cloud.google.com/bigquery/docs/partitioned-tables · https://cloud.google.com/bigquery/docs/clustered-tables · https://cloud.google.com/bigquery/docs/external-data-cloud-storage |
+
+## AWS — Data Engineer Associate (DEA-C01)
+
+_(ainda não mapeado — adicionar URLs de docs.aws.amazon.com conforme os
+tópicos de `docs/content-plan.md` forem trabalhados)_
+
+## Azure — Fabric Data Engineer Associate (DP-700)
+
+_(ainda não mapeado — adicionar URLs de learn.microsoft.com/fabric conforme
+os tópicos de `docs/content-plan.md` forem trabalhados)_
+
+## Como adicionar uma entrada nova
+
+Ao gerar conteúdo pra um tópico que ainda não está aqui: encontre a página
+de documentação oficial do produto que cobre esse tópico, adicione a linha
+na tabela correspondente, e só então gere as perguntas — isso mantém o mapa
+crescendo junto com o conteúdo real, em vez de ficar um documento à parte
+que desatualiza.

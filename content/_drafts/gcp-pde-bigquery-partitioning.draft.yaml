@@ -1,0 +1,111 @@
+# Rascunho gerado pelo pipeline de content-gen (ver docs/content-gen-pipeline.md).
+# NÃO é lido pelo seed_dev.py — só entra em content/gcp-pde.yaml depois de
+# revisão humana + scripts/merge_content_draft.py.
+#
+# Cada pergunta abaixo tem `source_url` (doc oficial usada como grounding) e
+# `verified: true/false` (resultado do fact-check automático contra o trecho
+# buscado). Só aprove perguntas com verified: true.
+
+certification: gcp-pde
+domain_slug: storing-data
+topic_slug: bigquery
+
+questions:
+  - prompt: >-
+      Além do particionamento por coluna de data/hora (time-unit column),
+      quais são os OUTROS dois tipos de particionamento suportados
+      nativamente pelo BigQuery?
+    source_url: https://cloud.google.com/bigquery/docs/partitioned-tables
+    verified: true
+    choices:
+      - text: Particionamento por tempo de ingestão e por intervalo de inteiros
+        correct: true
+        explanation: >-
+          O BigQuery suporta 3 tipos: por coluna de data/hora, por tempo de
+          ingestão (a tabela é particionada automaticamente pelo momento em
+          que o BigQuery recebeu a linha) e por intervalo de valores de uma
+          coluna INTEGER (com início, fim e intervalo definidos).
+      - text: Particionamento por hash e por range de STRING
+        correct: false
+        explanation: >-
+          BigQuery não tem particionamento nativo por hash nem por range de
+          STRING — só por coluna de data/hora, tempo de ingestão, ou
+          intervalo de inteiros.
+      - text: Particionamento por região e por projeto
+        correct: false
+        explanation: >-
+          Região e projeto são conceitos de organização de recursos do GCP,
+          não tipos de particionamento de tabela do BigQuery.
+      - text: Particionamento por clustering automático e por tamanho de arquivo
+        correct: false
+        explanation: >-
+          Clustering é uma técnica separada e complementar ao particionamento
+          (não um tipo dele), e "tamanho de arquivo" não é critério de
+          particionamento no BigQuery.
+
+  - prompt: >-
+      Uma tabela do BigQuery, se particionada por data, teria partições com
+      menos de 10 GB de dados cada. Qual é a recomendação oficial do Google
+      para esse cenário?
+    source_url: https://cloud.google.com/bigquery/docs/partitioned-tables
+    verified: true
+    choices:
+      - text: Usar clustering em vez de particionamento
+        correct: true
+        explanation: >-
+          A documentação recomenda usar clustering em vez de particionamento
+          quando o particionamento resultaria em pouca quantidade de dados
+          por partição (aproximadamente menos de 10 GB) — clustering dá
+          granularidade mais fina sem o overhead de muitas partições
+          pequenas.
+      - text: Particionar por hora em vez de por dia, para aumentar o número de partições
+        correct: false
+        explanation: >-
+          Aumentar o número de partições pequenas é o problema, não a
+          solução — a orientação oficial vai na direção contrária
+          (clustering, não mais granularidade de partição).
+      - text: Migrar os dados para o Cloud Storage e usar tabela externa
+        correct: false
+        explanation: >-
+          Tabelas externas resolvem outro problema (acesso a dados fora do
+          BigQuery); não é a recomendação da documentação para partições
+          pequenas demais.
+      - text: Remover o particionamento e confiar apenas em cache de resultado de query
+        correct: false
+        explanation: >-
+          Cache de resultado ajuda em queries repetidas idênticas, mas não é
+          a alternativa recomendada pela documentação para esse cenário —
+          clustering é.
+
+  - prompt: >-
+      Numa tabela do BigQuery particionada por uma coluna DATE, o que
+      acontece com uma linha cujo valor de partição é NULL ou está fora do
+      intervalo de datas suportado (antes de 1960 ou depois de 2159)?
+    source_url: https://cloud.google.com/bigquery/docs/partitioned-tables
+    verified: true
+    choices:
+      - text: >-
+          Ela vai para partições especiais automáticas (__NULL__ ou
+          __UNPARTITIONED__)
+        correct: true
+        explanation: >-
+          O BigQuery cria automaticamente as partições especiais __NULL__
+          (para valores NULL na coluna de particionamento) e
+          __UNPARTITIONED__ (para datas fora do intervalo suportado,
+          1960-01-01 a 2159-12-31) em tabelas particionadas por coluna de
+          data/hora.
+      - text: A inserção da linha falha com erro de schema
+        correct: false
+        explanation: >-
+          A linha não é rejeitada — ela é aceita e roteada para uma das
+          partições especiais automáticas.
+      - text: Ela é descartada silenciosamente pelo BigQuery
+        correct: false
+        explanation: >-
+          BigQuery não descarta a linha; ela fica acessível normalmente,
+          apenas dentro das partições especiais __NULL__/__UNPARTITIONED__.
+      - text: Ela é duplicada em todas as partições existentes
+        correct: false
+        explanation: >-
+          Não há duplicação — cada linha vai para exatamente uma partição
+          (a especial correspondente, nesse caso).

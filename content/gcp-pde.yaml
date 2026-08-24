@@ -1,522 +1,446 @@
-# Conteúdo (domínios/tópicos/perguntas) do Google Cloud — Professional Data
-# Engineer. Estrutura de domínios segue o guia oficial v4.2
-# (https://services.google.com/fh/files/misc/professional_data_engineer_exam_guide_english.pdf).
-#
-# Ver docs/content-plan.md pro plano de volume/ritmo e docs/product-spec.md
-# pra decisão de escopo (blueprint completo, 2026-08-10).
-#
-# Perguntas são escritas do zero pela equipe do CertFly — nunca copiadas de
-# bancos de questões reais (ver aviso legal em docs/content-plan.md).
-
 provider:
   name: Google Cloud
   slug: google-cloud
-
 certification:
   name: Professional Data Engineer
   slug: gcp-pde
-
 domains:
-  - name: Storing the data
-    slug: storing-data
-    weight_pct: 20
-    order: 3
-    topics:
-      - name: BigQuery
-        slug: bigquery
-        order: 1
-        questions:
-          - prompt: >-
-              Qual tipo de tabela do BigQuery reduz custo de consultas
-              filtrando por uma coluna de data?
-            choices:
-              - text: Tabela particionada por data
-                correct: true
-                explanation: >-
-                  Particionar por data faz o BigQuery escanear só as
-                  partições relevantes, reduzindo bytes lidos e custo.
-              - text: Tabela clusterizada por STRING
-                correct: false
-                explanation: >-
-                  Clustering ajuda em filtros/agrupamentos, mas não é a
-                  técnica específica pra reduzir custo em filtros de data.
-              - text: View materializada
-                correct: false
-                explanation: >-
-                  Views materializadas aceleram consultas repetidas, mas
-                  não são a resposta pra particionamento por data.
-              - text: Tabela wildcard (com sufixo de data no nome)
-                correct: false
-                explanation: >-
-                  Tabelas wildcard organizam dados em tabelas separadas por
-                  dia, mas cada consulta ainda paga pra escanear todas as
-                  tabelas que casam com o padrão — não reduz custo por
-                  filtro de coluna como o particionamento nativo.
-
-          - prompt: >-
-              Qual comando cria uma tabela externa no BigQuery apontando
-              para dados no Cloud Storage?
-            choices:
-              - text: CREATE OR REPLACE EXTERNAL TABLE
-                correct: true
-                explanation: >-
-                  É o comando padrão do BigQuery pra registrar uma tabela
-                  externa sobre dados no GCS, sem carregar os dados pro
-                  armazenamento nativo do BigQuery.
-              - text: CREATE VIEW
-                correct: false
-                explanation: >-
-                  CREATE VIEW cria uma view lógica sobre uma query, não uma
-                  tabela externa sobre arquivos.
-              - text: CREATE MATERIALIZED VIEW
-                correct: false
-                explanation: >-
-                  Materialized view pré-computa resultados de uma query;
-                  não aponta pra arquivos externos.
-              - text: LOAD DATA
-                correct: false
-                explanation: >-
-                  LOAD DATA importa os dados para dentro do armazenamento
-                  nativo do BigQuery — o oposto de uma tabela externa, que
-                  mantém os dados no GCS.
-
-          - prompt: >-
-              Qual serviço do Google Cloud é um banco NoSQL de baixa
-              latência voltado a séries temporais e IoT em altíssima
-              escala?
-            choices:
-              - text: Bigtable
-                correct: true
-                explanation: >-
-                  Bigtable é o banco NoSQL wide-column do GCP voltado a
-                  alta taxa de escrita/leitura, ideal pra séries temporais
-                  e IoT.
-              - text: Firestore
-                correct: false
-                explanation: >-
-                  Firestore é um banco de documentos voltado a apps
-                  mobile/web, não otimizado pro perfil de série temporal em
-                  altíssima escala.
-              - text: Cloud SQL
-                correct: false
-                explanation: >-
-                  Cloud SQL é relacional (Postgres/MySQL), não o encaixe
-                  pra esse padrão de acesso de altíssima taxa de
-                  escrita/leitura.
-              - text: Spanner
-                correct: false
-                explanation: >-
-                  Spanner é relacional distribuído com consistência forte
-                  global — ótimo pra transações críticas, mas não é o
-                  encaixe natural (nem o mais econômico) pra séries
-                  temporais/IoT de altíssimo volume.
-
-          - prompt: >-
-              Uma equipe precisa que dashboards de BI parem de escanear
-              terabytes toda vez que alguém abre um relatório com as mesmas
-              agregações. Qual recurso do BigQuery resolve isso mantendo os
-              dados sempre atualizados automaticamente, sem job manual de
-              refresh?
-            choices:
-              - text: View materializada
-                correct: true
-                explanation: >-
-                  Views materializadas pré-computam e armazenam o
-                  resultado de uma query, e o BigQuery as atualiza
-                  incrementalmente de forma automática conforme a tabela
-                  base muda — sem precisar de um job de refresh manual.
-              - text: View comum (lógica)
-                correct: false
-                explanation: >-
-                  Uma view comum só guarda a definição da query — toda vez
-                  que é consultada, o BigQuery reexecuta o processamento
-                  completo sobre a tabela base.
-              - text: Tabela clusterizada
-                correct: false
-                explanation: >-
-                  Clustering melhora a eficiência de filtros/agrupamentos
-                  na tabela original, mas não pré-computa nem armazena o
-                  resultado de uma agregação específica.
-              - text: BI Engine sem nenhuma outra configuração
-                correct: false
-                explanation: >-
-                  BI Engine acelera consultas via cache em memória, mas
-                  não substitui a pré-computação incremental e persistente
-                  de uma view materializada — e sozinho não garante que o
-                  resultado fique sempre atualizado sem reprocessar.
-
-          - prompt: >-
-              Qual é a principal vantagem de usar BigLake em vez de
-              carregar dados do Cloud Storage direto como tabela externa no
-              BigQuery?
-            choices:
-              - text: >-
-                  Aplica controle de acesso refinado (row/column-level) de
-                  forma consistente, independente da engine que lê os
-                  dados (BigQuery, Spark, etc.)
-                correct: true
-                explanation: >-
-                  BigLake adiciona uma camada de governança/controle de
-                  acesso uniforme sobre dados em data lakes, aplicada
-                  independente de qual engine de processamento está lendo
-                  — isso não existe numa tabela externa comum.
-              - text: Torna a consulta mais rápida que uma tabela nativa
-                correct: false
-                explanation: >-
-                  BigLake não torna a leitura de arquivos no GCS mais
-                  rápida que dados nativos do BigQuery — a vantagem
-                  principal é governança unificada, não performance bruta.
-              - text: Elimina a necessidade de definir um schema
-                correct: false
-                explanation: >-
-                  BigLake ainda trabalha sobre um schema definido/cataloga
-                  do — não elimina essa necessidade.
-              - text: Permite escrever dados diretamente via SQL DML
-                correct: false
-                explanation: >-
-                  O foco do BigLake é leitura governada de dados no data
-                  lake; não é a característica que o diferencia de uma
-                  tabela externa simples.
-
-      - name: Bancos operacionais (Cloud SQL, AlloyDB, Spanner)
-        slug: bancos-operacionais
-        order: 2
-        questions:
-          - prompt: >-
-              Uma aplicação transacional precisa de consistência forte
-              global e escala horizontal além da capacidade de um único
-              banco relacional tradicional. Qual serviço do GCP atende
-              esse requisito?
-            choices:
-              - text: Spanner
-                correct: true
-                explanation: >-
-                  Spanner combina o modelo relacional (SQL, transações
-                  ACID) com escala horizontal e consistência forte global
-                  — é o serviço do GCP feito exatamente pra esse cenário.
-              - text: Cloud SQL
-                correct: false
-                explanation: >-
-                  Cloud SQL é um banco relacional gerenciado (Postgres/
-                  MySQL/SQL Server), mas roda numa única instância/região —
-                  não escala horizontalmente como o Spanner.
-              - text: AlloyDB
-                correct: false
-                explanation: >-
-                  AlloyDB é Postgres-compatível de alta performance, com
-                  boa escala de leitura via réplicas, mas não tem o mesmo
-                  modelo de escala horizontal com consistência forte global
-                  do Spanner.
-              - text: Bigtable
-                correct: false
-                explanation: >-
-                  Bigtable escala horizontalmente muito bem, mas é NoSQL
-                  (sem SQL relacional completo nem transações ACID
-                  multi-linha da forma que o Spanner oferece).
-
-          - prompt: >-
-              Uma equipe migra uma carga de trabalho Postgres on-premises
-              que precisa de alta performance analítica em cima de dados
-              transacionais, mantendo compatibilidade total com o driver
-              Postgres. Qual serviço é o mais indicado?
-            choices:
-              - text: AlloyDB for PostgreSQL
-                correct: true
-                explanation: >-
-                  AlloyDB é compatível com Postgres e otimizado pra cargas
-                  que misturam transacional e analítico (HTAP), com
-                  performance bem acima do Postgres padrão — encaixe direto
-                  pra esse cenário.
-              - text: Cloud SQL for PostgreSQL
-                correct: false
-                explanation: >-
-                  Cloud SQL também é Postgres-compatível, mas não tem as
-                  otimizações de performance analítica do AlloyDB — é a
-                  opção mais genérica, não a mais indicada aqui.
-              - text: BigQuery
-                correct: false
-                explanation: >-
-                  BigQuery é o data warehouse analítico do GCP, mas não é
-                  compatível com o driver Postgres nem serve como
-                  substituto direto de uma carga transacional migrada.
-              - text: Firestore
-                correct: false
-                explanation: >-
-                  Firestore é um banco de documentos NoSQL — não tem
-                  relação com compatibilidade Postgres nem com o perfil
-                  HTAP do cenário.
-
-  - name: Ingesting and processing the data
-    slug: ingesting-processing
-    weight_pct: 25
+- name: Storing the data
+  slug: storing-data
+  weight_pct: 20
+  order: 3
+  topics:
+  - name: BigQuery
+    slug: bigquery
+    order: 1
+    questions:
+    - prompt: Qual tipo de tabela do BigQuery reduz custo de consultas filtrando por
+        uma coluna de data?
+      choices:
+      - text: Tabela particionada por data
+        correct: true
+        explanation: Particionar por data faz o BigQuery escanear só as partições
+          relevantes, reduzindo bytes lidos e custo.
+      - text: Tabela clusterizada por STRING
+        correct: false
+        explanation: Clustering ajuda em filtros/agrupamentos, mas não é a técnica
+          específica pra reduzir custo em filtros de data.
+      - text: View materializada
+        correct: false
+        explanation: Views materializadas aceleram consultas repetidas, mas não são
+          a resposta pra particionamento por data.
+      - text: Tabela wildcard (com sufixo de data no nome)
+        correct: false
+        explanation: Tabelas wildcard organizam dados em tabelas separadas por dia,
+          mas cada consulta ainda paga pra escanear todas as tabelas que casam com
+          o padrão — não reduz custo por filtro de coluna como o particionamento nativo.
+    - prompt: Qual comando cria uma tabela externa no BigQuery apontando para dados
+        no Cloud Storage?
+      choices:
+      - text: CREATE OR REPLACE EXTERNAL TABLE
+        correct: true
+        explanation: É o comando padrão do BigQuery pra registrar uma tabela externa
+          sobre dados no GCS, sem carregar os dados pro armazenamento nativo do BigQuery.
+      - text: CREATE VIEW
+        correct: false
+        explanation: CREATE VIEW cria uma view lógica sobre uma query, não uma tabela
+          externa sobre arquivos.
+      - text: CREATE MATERIALIZED VIEW
+        correct: false
+        explanation: Materialized view pré-computa resultados de uma query; não aponta
+          pra arquivos externos.
+      - text: LOAD DATA
+        correct: false
+        explanation: LOAD DATA importa os dados para dentro do armazenamento nativo
+          do BigQuery — o oposto de uma tabela externa, que mantém os dados no GCS.
+    - prompt: Qual serviço do Google Cloud é um banco NoSQL de baixa latência voltado
+        a séries temporais e IoT em altíssima escala?
+      choices:
+      - text: Bigtable
+        correct: true
+        explanation: Bigtable é o banco NoSQL wide-column do GCP voltado a alta taxa
+          de escrita/leitura, ideal pra séries temporais e IoT.
+      - text: Firestore
+        correct: false
+        explanation: Firestore é um banco de documentos voltado a apps mobile/web,
+          não otimizado pro perfil de série temporal em altíssima escala.
+      - text: Cloud SQL
+        correct: false
+        explanation: Cloud SQL é relacional (Postgres/MySQL), não o encaixe pra esse
+          padrão de acesso de altíssima taxa de escrita/leitura.
+      - text: Spanner
+        correct: false
+        explanation: Spanner é relacional distribuído com consistência forte global
+          — ótimo pra transações críticas, mas não é o encaixe natural (nem o mais
+          econômico) pra séries temporais/IoT de altíssimo volume.
+    - prompt: Uma equipe precisa que dashboards de BI parem de escanear terabytes
+        toda vez que alguém abre um relatório com as mesmas agregações. Qual recurso
+        do BigQuery resolve isso mantendo os dados sempre atualizados automaticamente,
+        sem job manual de refresh?
+      choices:
+      - text: View materializada
+        correct: true
+        explanation: Views materializadas pré-computam e armazenam o resultado de
+          uma query, e o BigQuery as atualiza incrementalmente de forma automática
+          conforme a tabela base muda — sem precisar de um job de refresh manual.
+      - text: View comum (lógica)
+        correct: false
+        explanation: Uma view comum só guarda a definição da query — toda vez que
+          é consultada, o BigQuery reexecuta o processamento completo sobre a tabela
+          base.
+      - text: Tabela clusterizada
+        correct: false
+        explanation: Clustering melhora a eficiência de filtros/agrupamentos na tabela
+          original, mas não pré-computa nem armazena o resultado de uma agregação
+          específica.
+      - text: BI Engine sem nenhuma outra configuração
+        correct: false
+        explanation: BI Engine acelera consultas via cache em memória, mas não substitui
+          a pré-computação incremental e persistente de uma view materializada — e
+          sozinho não garante que o resultado fique sempre atualizado sem reprocessar.
+    - prompt: Qual é a principal vantagem de usar BigLake em vez de carregar dados
+        do Cloud Storage direto como tabela externa no BigQuery?
+      choices:
+      - text: Aplica controle de acesso refinado (row/column-level) de forma consistente,
+          independente da engine que lê os dados (BigQuery, Spark, etc.)
+        correct: true
+        explanation: BigLake adiciona uma camada de governança/controle de acesso
+          uniforme sobre dados em data lakes, aplicada independente de qual engine
+          de processamento está lendo — isso não existe numa tabela externa comum.
+      - text: Torna a consulta mais rápida que uma tabela nativa
+        correct: false
+        explanation: BigLake não torna a leitura de arquivos no GCS mais rápida que
+          dados nativos do BigQuery — a vantagem principal é governança unificada,
+          não performance bruta.
+      - text: Elimina a necessidade de definir um schema
+        correct: false
+        explanation: BigLake ainda trabalha sobre um schema definido/cataloga do —
+          não elimina essa necessidade.
+      - text: Permite escrever dados diretamente via SQL DML
+        correct: false
+        explanation: O foco do BigLake é leitura governada de dados no data lake;
+          não é a característica que o diferencia de uma tabela externa simples.
+    - prompt: Além do particionamento por coluna de data/hora (time-unit column),
+        quais são os OUTROS dois tipos de particionamento suportados nativamente pelo
+        BigQuery?
+      choices:
+      - text: Particionamento por tempo de ingestão e por intervalo de inteiros
+        correct: true
+        explanation: 'O BigQuery suporta 3 tipos: por coluna de data/hora, por tempo
+          de ingestão (a tabela é particionada automaticamente pelo momento em que
+          o BigQuery recebeu a linha) e por intervalo de valores de uma coluna INTEGER
+          (com início, fim e intervalo definidos).'
+      - text: Particionamento por hash e por range de STRING
+        correct: false
+        explanation: BigQuery não tem particionamento nativo por hash nem por range
+          de STRING — só por coluna de data/hora, tempo de ingestão, ou intervalo
+          de inteiros.
+      - text: Particionamento por região e por projeto
+        correct: false
+        explanation: Região e projeto são conceitos de organização de recursos do
+          GCP, não tipos de particionamento de tabela do BigQuery.
+      - text: Particionamento por clustering automático e por tamanho de arquivo
+        correct: false
+        explanation: Clustering é uma técnica separada e complementar ao particionamento
+          (não um tipo dele), e "tamanho de arquivo" não é critério de particionamento
+          no BigQuery.
+    - prompt: Uma tabela do BigQuery, se particionada por data, teria partições com
+        menos de 10 GB de dados cada. Qual é a recomendação oficial do Google para
+        esse cenário?
+      choices:
+      - text: Usar clustering em vez de particionamento
+        correct: true
+        explanation: A documentação recomenda usar clustering em vez de particionamento
+          quando o particionamento resultaria em pouca quantidade de dados por partição
+          (aproximadamente menos de 10 GB) — clustering dá granularidade mais fina
+          sem o overhead de muitas partições pequenas.
+      - text: Particionar por hora em vez de por dia, para aumentar o número de partições
+        correct: false
+        explanation: Aumentar o número de partições pequenas é o problema, não a solução
+          — a orientação oficial vai na direção contrária (clustering, não mais granularidade
+          de partição).
+      - text: Migrar os dados para o Cloud Storage e usar tabela externa
+        correct: false
+        explanation: Tabelas externas resolvem outro problema (acesso a dados fora
+          do BigQuery); não é a recomendação da documentação para partições pequenas
+          demais.
+      - text: Remover o particionamento e confiar apenas em cache de resultado de
+          query
+        correct: false
+        explanation: Cache de resultado ajuda em queries repetidas idênticas, mas
+          não é a alternativa recomendada pela documentação para esse cenário — clustering
+          é.
+    - prompt: Numa tabela do BigQuery particionada por uma coluna DATE, o que acontece
+        com uma linha cujo valor de partição é NULL ou está fora do intervalo de datas
+        suportado (antes de 1960 ou depois de 2159)?
+      choices:
+      - text: Ela vai para partições especiais automáticas (__NULL__ ou __UNPARTITIONED__)
+        correct: true
+        explanation: O BigQuery cria automaticamente as partições especiais __NULL__
+          (para valores NULL na coluna de particionamento) e __UNPARTITIONED__ (para
+          datas fora do intervalo suportado, 1960-01-01 a 2159-12-31) em tabelas particionadas
+          por coluna de data/hora.
+      - text: A inserção da linha falha com erro de schema
+        correct: false
+        explanation: A linha não é rejeitada — ela é aceita e roteada para uma das
+          partições especiais automáticas.
+      - text: Ela é descartada silenciosamente pelo BigQuery
+        correct: false
+        explanation: BigQuery não descarta a linha; ela fica acessível normalmente,
+          apenas dentro das partições especiais __NULL__/__UNPARTITIONED__.
+      - text: Ela é duplicada em todas as partições existentes
+        correct: false
+        explanation: Não há duplicação — cada linha vai para exatamente uma partição
+          (a especial correspondente, nesse caso).
+  - name: Bancos operacionais (Cloud SQL, AlloyDB, Spanner)
+    slug: bancos-operacionais
     order: 2
-    topics:
-      - name: Planejamento de pipelines
-        slug: planejamento-pipelines
-        order: 1
-        questions:
-          - prompt: >-
-              No planejamento de um pipeline de dados, "sink" se refere a
-              quê?
-            choices:
-              - text: O destino final pra onde os dados processados vão
-                correct: true
-                explanation: >-
-                  Sink é o termo padrão pro destino de um pipeline (ex:
-                  BigQuery, Cloud Storage) — de onde os dados "escoam" pra
-                  fora do pipeline.
-              - text: A origem de onde os dados são lidos
-                correct: false
-                explanation: >-
-                  Essa é a definição de "source" (origem), não de sink —
-                  são pontos opostos do pipeline.
-              - text: O componente que aplica transformações nos dados
-                correct: false
-                explanation: >-
-                  Transformação é uma etapa intermediária do pipeline, não
-                  o destino final dos dados.
-              - text: O mecanismo de retry em caso de falha
-                correct: false
-                explanation: >-
-                  Retry é um mecanismo de resiliência, sem relação com o
-                  conceito de sink.
-
-          - prompt: >-
-              Um pipeline batch precisa processar arquivos que chegam de
-              forma imprevisível ao longo do dia (não em horário fixo), e a
-              equipe quer evitar rodar um job agendado que na maioria das
-              vezes não encontra arquivo novo. Qual abordagem de ingestão
-              resolve isso de forma mais eficiente?
-            choices:
-              - text: "Ingestão orientada a evento (ex: gatilho de Cloud Storage)"
-                correct: true
-                explanation: >-
-                  Um gatilho disparado pela chegada do arquivo (event-
-                  driven) processa exatamente quando há dado novo, sem
-                  desperdiçar execuções agendadas que não encontram nada
-                  pra processar.
-              - text: Job agendado a cada 5 minutos
-                correct: false
-                explanation: >-
-                  Resolve o problema de latência até certo ponto, mas
-                  desperdiça execuções (e custo) rodando sem dado novo pra
-                  processar na maioria das vezes.
-              - text: Job agendado uma vez por dia
-                correct: false
-                explanation: >-
-                  Não atende a necessidade de processar arquivos
-                  imprevisíveis ao longo do dia — a latência ficaria alta
-                  demais.
-              - text: Streaming contínuo via Pub/Sub
-                correct: false
-                explanation: >-
-                  Streaming resolveria, mas é mais complexo/caro do que o
-                  necessário pra um caso que já é batch por natureza (arquivos
-                  chegando, não eventos individuais) — o gatilho orientado a
-                  evento é o encaixe mais direto.
-
-      - name: Construção de pipelines (batch e streaming)
-        slug: construcao-pipelines
-        order: 2
-        questions:
-          - prompt: >-
-              Em processamento de streaming, o que é "late arriving data"
-              (dado que chega atrasado)?
-            choices:
-              - text: >-
-                  Um evento cujo timestamp de origem é anterior ao momento
-                  em que ele efetivamente chega no pipeline pra
-                  processamento
-                correct: true
-                explanation: >-
-                  É exatamente essa a definição — o evento "aconteceu" num
-                  momento, mas só chega no sistema de processamento depois,
-                  por atraso de rede, buffering no cliente, etc.
-              - text: Um evento processado antes do horário programado
-                correct: false
-                explanation: >-
-                  Isso descreveria um evento adiantado, não atrasado —
-                  contrário do conceito.
-              - text: >-
-                  Um erro de processamento que precisa ser reprocessado do
-                  zero
-                correct: false
-                explanation: >-
-                  Late data é um conceito de temporalidade do evento, não
-                  um erro de processamento a ser corrigido via reprocesso.
-              - text: A janela de tempo usada para agregações (windowing)
-                correct: false
-                explanation: >-
-                  Windowing é a técnica usada para lidar com, entre outras
-                  coisas, dado atrasado — mas não é a definição de "late
-                  arriving data" em si.
-
-          - prompt: >-
-              Qual é a principal diferença entre Dataflow e Dataproc como
-              serviços de processamento de dados no GCP?
-            choices:
-              - text: >-
-                  Dataflow é serverless e roda Apache Beam (unifica batch e
-                  streaming); Dataproc é um cluster gerenciado Hadoop/Spark
-                  que exige mais gestão de infraestrutura
-                correct: true
-                explanation: >-
-                  Essa é a diferença central: Dataflow abstrai totalmente
-                  a infraestrutura (você só escreve o pipeline Beam),
-                  enquanto Dataproc gerencia clusters Hadoop/Spark — mais
-                  controle, mais responsabilidade de dimensionamento.
-              - text: Dataflow só processa batch; Dataproc só processa streaming
-                correct: false
-                explanation: >-
-                  Invertido e impreciso: Dataflow (via Beam) trata batch E
-                  streaming com o mesmo modelo de programação; Dataproc
-                  também suporta ambos via Spark Structured Streaming.
-              - text: Dataproc é serverless; Dataflow exige gestão de cluster
-                correct: false
-                explanation: >-
-                  É o oposto — Dataflow é o serviço serverless; Dataproc é
-                  quem expõe (e exige gerenciar) clusters.
-              - text: >-
-                  Não há diferença relevante — são nomes distintos pro
-                  mesmo serviço
-                correct: false
-                explanation: >-
-                  São serviços com arquiteturas e modelos operacionais
-                  bem diferentes, não um simples rebranding.
-
-      - name: Deploy e operacionalização de pipelines
-        slug: deploy-operacionalizacao
-        order: 3
-        questions:
-          - prompt: >-
-              Qual serviço do GCP é o mais indicado para orquestrar um DAG
-              de dependências entre múltiplos jobs de dados (ex: "rodar
-              transformação B só depois que A terminar com sucesso")?
-            choices:
-              - text: Cloud Composer
-                correct: true
-                explanation: >-
-                  Cloud Composer é Apache Airflow gerenciado no GCP — feito
-                  exatamente pra orquestrar DAGs com dependências entre
-                  tarefas.
-              - text: Cloud Scheduler
-                correct: false
-                explanation: >-
-                  Cloud Scheduler dispara jobs por horário (tipo cron), mas
-                  não modela dependências entre múltiplas tarefas como um
-                  DAG.
-              - text: Pub/Sub
-                correct: false
-                explanation: >-
-                  Pub/Sub é mensageria assíncrona — pode ser usado como
-                  peça de uma arquitetura orientada a evento, mas não é uma
-                  ferramenta de orquestração de DAG.
-              - text: Cloud Build
-                correct: false
-                explanation: >-
-                  Cloud Build é CI/CD (build/test/deploy de artefatos de
-                  código), não orquestração de pipelines de dados em
-                  produção.
-
-  - name: Preparing and using data for analysis
-    slug: preparing-analysis
-    weight_pct: 15
-    order: 4
-    topics:
-      - name: Preparação para visualização (BI)
-        slug: preparacao-visualizacao
-        order: 1
-        questions:
-          - prompt: >-
-              Um dashboard de BI conectado ao BigQuery está lento porque
-              cada carregamento reexecuta uma agregação pesada sobre uma
-              tabela de bilhões de linhas. Sem mudar a query, qual recurso
-              acelera esses carregamentos usando cache em memória?
-            choices:
-              - text: BI Engine
-                correct: true
-                explanation: >-
-                  BI Engine é um serviço de análise in-memory do BigQuery
-                  feito exatamente pra acelerar dashboards e ferramentas de
-                  BI, sem precisar reescrever a query.
-              - text: Particionamento da tabela
-                correct: false
-                explanation: >-
-                  Particionamento ajuda a reduzir bytes escaneados quando a
-                  query filtra por partição, mas não é a técnica de cache
-                  em memória descrita no cenário.
-              - text: Aumentar as slots reservadas (reservation)
-                correct: false
-                explanation: >-
-                  Mais slots aumentam capacidade de processamento paralelo,
-                  mas não é a resposta específica pra "cache em memória"
-                  pedida no enunciado.
-              - text: Exportar os dados para uma planilha
-                correct: false
-                explanation: >-
-                  Isso tira os dados da fonte de verdade e não escala nem
-                  resolve o problema de performance de forma sustentável.
-
-      - name: Preparação para IA e ML
-        slug: preparacao-ia-ml
-        order: 2
-        questions:
-          - prompt: >-
-              Qual recurso do BigQuery permite treinar e usar modelos de
-              machine learning direto via SQL, sem exportar os dados para
-              outra ferramenta?
-            choices:
-              - text: BigQuery ML
-                correct: true
-                explanation: >-
-                  BigQuery ML permite criar, treinar e usar modelos de ML
-                  usando comandos SQL padrão (CREATE MODEL, ML.PREDICT),
-                  direto sobre os dados já no BigQuery.
-              - text: Dataflow
-                correct: false
-                explanation: >-
-                  Dataflow processa/transforma dados em pipelines, mas não
-                  é uma ferramenta de treino de modelo via SQL.
-              - text: Looker
-                correct: false
-                explanation: >-
-                  Looker é uma ferramenta de BI/visualização, não de
-                  treinamento de modelos de ML.
-              - text: Data Catalog
-                correct: false
-                explanation: >-
-                  Data Catalog é sobre descoberta/governança de metadados,
-                  sem relação com treino de modelos.
-
-      - name: Compartilhamento de dados
-        slug: compartilhamento-dados
-        order: 3
-        questions:
-          - prompt: >-
-              Qual serviço do GCP permite publicar e compartilhar datasets
-              do BigQuery de forma controlada com outras organizações, sem
-              duplicar os dados fisicamente?
-            choices:
-              - text: Analytics Hub
-                correct: true
-                explanation: >-
-                  Analytics Hub é o serviço de compartilhamento de dados do
-                  BigQuery — publica datasets como "listagens" que outras
-                  organizações podem assinar sem copiar os dados.
-              - text: Cloud Storage Transfer Service
-                correct: false
-                explanation: >-
-                  Esse serviço move/copia dados entre sistemas de
-                  armazenamento — é o oposto de compartilhar sem duplicar.
-              - text: IAM Conditions
-                correct: false
-                explanation: >-
-                  IAM Conditions refina permissões de acesso, mas não é o
-                  mecanismo de publicação/assinatura de datasets entre
-                  organizações.
-              - text: VPC Service Controls
-                correct: false
-                explanation: >-
-                  VPC Service Controls cria perímetros de segurança de rede
-                  — restringe acesso, não é uma ferramenta de
-                  compartilhamento de dados entre organizações.
+    questions:
+    - prompt: Uma aplicação transacional precisa de consistência forte global e escala
+        horizontal além da capacidade de um único banco relacional tradicional. Qual
+        serviço do GCP atende esse requisito?
+      choices:
+      - text: Spanner
+        correct: true
+        explanation: Spanner combina o modelo relacional (SQL, transações ACID) com
+          escala horizontal e consistência forte global — é o serviço do GCP feito
+          exatamente pra esse cenário.
+      - text: Cloud SQL
+        correct: false
+        explanation: Cloud SQL é um banco relacional gerenciado (Postgres/ MySQL/SQL
+          Server), mas roda numa única instância/região — não escala horizontalmente
+          como o Spanner.
+      - text: AlloyDB
+        correct: false
+        explanation: AlloyDB é Postgres-compatível de alta performance, com boa escala
+          de leitura via réplicas, mas não tem o mesmo modelo de escala horizontal
+          com consistência forte global do Spanner.
+      - text: Bigtable
+        correct: false
+        explanation: Bigtable escala horizontalmente muito bem, mas é NoSQL (sem SQL
+          relacional completo nem transações ACID multi-linha da forma que o Spanner
+          oferece).
+    - prompt: Uma equipe migra uma carga de trabalho Postgres on-premises que precisa
+        de alta performance analítica em cima de dados transacionais, mantendo compatibilidade
+        total com o driver Postgres. Qual serviço é o mais indicado?
+      choices:
+      - text: AlloyDB for PostgreSQL
+        correct: true
+        explanation: AlloyDB é compatível com Postgres e otimizado pra cargas que
+          misturam transacional e analítico (HTAP), com performance bem acima do Postgres
+          padrão — encaixe direto pra esse cenário.
+      - text: Cloud SQL for PostgreSQL
+        correct: false
+        explanation: Cloud SQL também é Postgres-compatível, mas não tem as otimizações
+          de performance analítica do AlloyDB — é a opção mais genérica, não a mais
+          indicada aqui.
+      - text: BigQuery
+        correct: false
+        explanation: BigQuery é o data warehouse analítico do GCP, mas não é compatível
+          com o driver Postgres nem serve como substituto direto de uma carga transacional
+          migrada.
+      - text: Firestore
+        correct: false
+        explanation: Firestore é um banco de documentos NoSQL — não tem relação com
+          compatibilidade Postgres nem com o perfil HTAP do cenário.
+- name: Ingesting and processing the data
+  slug: ingesting-processing
+  weight_pct: 25
+  order: 2
+  topics:
+  - name: Planejamento de pipelines
+    slug: planejamento-pipelines
+    order: 1
+    questions:
+    - prompt: No planejamento de um pipeline de dados, "sink" se refere a quê?
+      choices:
+      - text: O destino final pra onde os dados processados vão
+        correct: true
+        explanation: 'Sink é o termo padrão pro destino de um pipeline (ex: BigQuery,
+          Cloud Storage) — de onde os dados "escoam" pra fora do pipeline.'
+      - text: A origem de onde os dados são lidos
+        correct: false
+        explanation: Essa é a definição de "source" (origem), não de sink — são pontos
+          opostos do pipeline.
+      - text: O componente que aplica transformações nos dados
+        correct: false
+        explanation: Transformação é uma etapa intermediária do pipeline, não o destino
+          final dos dados.
+      - text: O mecanismo de retry em caso de falha
+        correct: false
+        explanation: Retry é um mecanismo de resiliência, sem relação com o conceito
+          de sink.
+    - prompt: Um pipeline batch precisa processar arquivos que chegam de forma imprevisível
+        ao longo do dia (não em horário fixo), e a equipe quer evitar rodar um job
+        agendado que na maioria das vezes não encontra arquivo novo. Qual abordagem
+        de ingestão resolve isso de forma mais eficiente?
+      choices:
+      - text: 'Ingestão orientada a evento (ex: gatilho de Cloud Storage)'
+        correct: true
+        explanation: Um gatilho disparado pela chegada do arquivo (event- driven)
+          processa exatamente quando há dado novo, sem desperdiçar execuções agendadas
+          que não encontram nada pra processar.
+      - text: Job agendado a cada 5 minutos
+        correct: false
+        explanation: Resolve o problema de latência até certo ponto, mas desperdiça
+          execuções (e custo) rodando sem dado novo pra processar na maioria das vezes.
+      - text: Job agendado uma vez por dia
+        correct: false
+        explanation: Não atende a necessidade de processar arquivos imprevisíveis
+          ao longo do dia — a latência ficaria alta demais.
+      - text: Streaming contínuo via Pub/Sub
+        correct: false
+        explanation: Streaming resolveria, mas é mais complexo/caro do que o necessário
+          pra um caso que já é batch por natureza (arquivos chegando, não eventos
+          individuais) — o gatilho orientado a evento é o encaixe mais direto.
+  - name: Construção de pipelines (batch e streaming)
+    slug: construcao-pipelines
+    order: 2
+    questions:
+    - prompt: Em processamento de streaming, o que é "late arriving data" (dado que
+        chega atrasado)?
+      choices:
+      - text: Um evento cujo timestamp de origem é anterior ao momento em que ele
+          efetivamente chega no pipeline pra processamento
+        correct: true
+        explanation: É exatamente essa a definição — o evento "aconteceu" num momento,
+          mas só chega no sistema de processamento depois, por atraso de rede, buffering
+          no cliente, etc.
+      - text: Um evento processado antes do horário programado
+        correct: false
+        explanation: Isso descreveria um evento adiantado, não atrasado — contrário
+          do conceito.
+      - text: Um erro de processamento que precisa ser reprocessado do zero
+        correct: false
+        explanation: Late data é um conceito de temporalidade do evento, não um erro
+          de processamento a ser corrigido via reprocesso.
+      - text: A janela de tempo usada para agregações (windowing)
+        correct: false
+        explanation: Windowing é a técnica usada para lidar com, entre outras coisas,
+          dado atrasado — mas não é a definição de "late arriving data" em si.
+    - prompt: Qual é a principal diferença entre Dataflow e Dataproc como serviços
+        de processamento de dados no GCP?
+      choices:
+      - text: Dataflow é serverless e roda Apache Beam (unifica batch e streaming);
+          Dataproc é um cluster gerenciado Hadoop/Spark que exige mais gestão de infraestrutura
+        correct: true
+        explanation: 'Essa é a diferença central: Dataflow abstrai totalmente a infraestrutura
+          (você só escreve o pipeline Beam), enquanto Dataproc gerencia clusters Hadoop/Spark
+          — mais controle, mais responsabilidade de dimensionamento.'
+      - text: Dataflow só processa batch; Dataproc só processa streaming
+        correct: false
+        explanation: 'Invertido e impreciso: Dataflow (via Beam) trata batch E streaming
+          com o mesmo modelo de programação; Dataproc também suporta ambos via Spark
+          Structured Streaming.'
+      - text: Dataproc é serverless; Dataflow exige gestão de cluster
+        correct: false
+        explanation: É o oposto — Dataflow é o serviço serverless; Dataproc é quem
+          expõe (e exige gerenciar) clusters.
+      - text: Não há diferença relevante — são nomes distintos pro mesmo serviço
+        correct: false
+        explanation: São serviços com arquiteturas e modelos operacionais bem diferentes,
+          não um simples rebranding.
+  - name: Deploy e operacionalização de pipelines
+    slug: deploy-operacionalizacao
+    order: 3
+    questions:
+    - prompt: 'Qual serviço do GCP é o mais indicado para orquestrar um DAG de dependências
+        entre múltiplos jobs de dados (ex: "rodar transformação B só depois que A
+        terminar com sucesso")?'
+      choices:
+      - text: Cloud Composer
+        correct: true
+        explanation: Cloud Composer é Apache Airflow gerenciado no GCP — feito exatamente
+          pra orquestrar DAGs com dependências entre tarefas.
+      - text: Cloud Scheduler
+        correct: false
+        explanation: Cloud Scheduler dispara jobs por horário (tipo cron), mas não
+          modela dependências entre múltiplas tarefas como um DAG.
+      - text: Pub/Sub
+        correct: false
+        explanation: Pub/Sub é mensageria assíncrona — pode ser usado como peça de
+          uma arquitetura orientada a evento, mas não é uma ferramenta de orquestração
+          de DAG.
+      - text: Cloud Build
+        correct: false
+        explanation: Cloud Build é CI/CD (build/test/deploy de artefatos de código),
+          não orquestração de pipelines de dados em produção.
+- name: Preparing and using data for analysis
+  slug: preparing-analysis
+  weight_pct: 15
+  order: 4
+  topics:
+  - name: Preparação para visualização (BI)
+    slug: preparacao-visualizacao
+    order: 1
+    questions:
+    - prompt: Um dashboard de BI conectado ao BigQuery está lento porque cada carregamento
+        reexecuta uma agregação pesada sobre uma tabela de bilhões de linhas. Sem
+        mudar a query, qual recurso acelera esses carregamentos usando cache em memória?
+      choices:
+      - text: BI Engine
+        correct: true
+        explanation: BI Engine é um serviço de análise in-memory do BigQuery feito
+          exatamente pra acelerar dashboards e ferramentas de BI, sem precisar reescrever
+          a query.
+      - text: Particionamento da tabela
+        correct: false
+        explanation: Particionamento ajuda a reduzir bytes escaneados quando a query
+          filtra por partição, mas não é a técnica de cache em memória descrita no
+          cenário.
+      - text: Aumentar as slots reservadas (reservation)
+        correct: false
+        explanation: Mais slots aumentam capacidade de processamento paralelo, mas
+          não é a resposta específica pra "cache em memória" pedida no enunciado.
+      - text: Exportar os dados para uma planilha
+        correct: false
+        explanation: Isso tira os dados da fonte de verdade e não escala nem resolve
+          o problema de performance de forma sustentável.
+  - name: Preparação para IA e ML
+    slug: preparacao-ia-ml
+    order: 2
+    questions:
+    - prompt: Qual recurso do BigQuery permite treinar e usar modelos de machine learning
+        direto via SQL, sem exportar os dados para outra ferramenta?
+      choices:
+      - text: BigQuery ML
+        correct: true
+        explanation: BigQuery ML permite criar, treinar e usar modelos de ML usando
+          comandos SQL padrão (CREATE MODEL, ML.PREDICT), direto sobre os dados já
+          no BigQuery.
+      - text: Dataflow
+        correct: false
+        explanation: Dataflow processa/transforma dados em pipelines, mas não é uma
+          ferramenta de treino de modelo via SQL.
+      - text: Looker
+        correct: false
+        explanation: Looker é uma ferramenta de BI/visualização, não de treinamento
+          de modelos de ML.
+      - text: Data Catalog
+        correct: false
+        explanation: Data Catalog é sobre descoberta/governança de metadados, sem
+          relação com treino de modelos.
+  - name: Compartilhamento de dados
+    slug: compartilhamento-dados
+    order: 3
+    questions:
+    - prompt: Qual serviço do GCP permite publicar e compartilhar datasets do BigQuery
+        de forma controlada com outras organizações, sem duplicar os dados fisicamente?
+      choices:
+      - text: Analytics Hub
+        correct: true
+        explanation: Analytics Hub é o serviço de compartilhamento de dados do BigQuery
+          — publica datasets como "listagens" que outras organizações podem assinar
+          sem copiar os dados.
+      - text: Cloud Storage Transfer Service
+        correct: false
+        explanation: Esse serviço move/copia dados entre sistemas de armazenamento
+          — é o oposto de compartilhar sem duplicar.
+      - text: IAM Conditions
+        correct: false
+        explanation: IAM Conditions refina permissões de acesso, mas não é o mecanismo
+          de publicação/assinatura de datasets entre organizações.
+      - text: VPC Service Controls
+        correct: false
+        explanation: VPC Service Controls cria perímetros de segurança de rede — restringe
+          acesso, não é uma ferramenta de compartilhamento de dados entre organizações.
