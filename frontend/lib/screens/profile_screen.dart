@@ -15,8 +15,14 @@ import '../theme.dart';
 class ProfileScreen extends StatefulWidget {
   final ApiClient apiClient;
   final VoidCallback? onLogout;
+  final VoidCallback onGoToCertifications;
 
-  const ProfileScreen({super.key, required this.apiClient, required this.onLogout});
+  const ProfileScreen({
+    super.key,
+    required this.apiClient,
+    required this.onLogout,
+    required this.onGoToCertifications,
+  });
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -61,7 +67,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             );
           }
-          return _ProfileBody(me: snapshot.data!, onLogout: widget.onLogout);
+          return _ProfileBody(
+            me: snapshot.data!,
+            onLogout: widget.onLogout,
+            onGoToCertifications: widget.onGoToCertifications,
+          );
         },
       ),
     );
@@ -71,8 +81,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 class _ProfileBody extends StatelessWidget {
   final Me me;
   final VoidCallback? onLogout;
+  final VoidCallback onGoToCertifications;
 
-  const _ProfileBody({required this.me, required this.onLogout});
+  const _ProfileBody({required this.me, required this.onLogout, required this.onGoToCertifications});
 
   @override
   Widget build(BuildContext context) {
@@ -121,7 +132,7 @@ class _ProfileBody extends StatelessWidget {
         _SettingsRow(
           icon: Icons.school_rounded,
           label: 'Trocar certificação',
-          onTap: null, // TODO: sem endpoint de listagem/troca de certificação ainda
+          onTap: onGoToCertifications,
         ),
         const SizedBox(height: 8),
         _SettingsRow(icon: Icons.notifications_rounded, label: 'Notificações', onTap: null),
