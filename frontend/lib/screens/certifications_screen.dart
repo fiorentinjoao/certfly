@@ -38,7 +38,14 @@ class _CertificationsScreenState extends State<CertificationsScreen> {
     _future = widget.apiClient.getCertifications();
   }
 
-  void _reload() => setState(() => _future = widget.apiClient.getCertifications());
+  void _reload() {
+    // Corpo em bloco, não arrow — ver comentário equivalente em
+    // profile_screen.dart._reload (mesmo bug: arrow function retorna o
+    // Future da atribuição, e setState() lança assertion em debug).
+    setState(() {
+      _future = widget.apiClient.getCertifications();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

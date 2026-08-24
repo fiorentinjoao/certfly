@@ -37,7 +37,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _future = widget.apiClient.getMe();
   }
 
-  void _reload() => setState(() => _future = widget.apiClient.getMe());
+  void _reload() {
+    // O callback do setState precisa ter corpo em bloco, não arrow: uma
+    // arrow function AVALIA E RETORNA o valor da atribuição (o Future em
+    // si), e setState() lança uma assertion em debug se o callback
+    // devolver algo (mesmo sem ser de fato assíncrono).
+    setState(() {
+      _future = widget.apiClient.getMe();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
