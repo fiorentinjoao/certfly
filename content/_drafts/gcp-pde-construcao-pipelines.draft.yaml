@@ -1,0 +1,106 @@
+certification: gcp-pde
+domain_slug: ingesting-processing
+topic_slug: construcao-pipelines
+
+questions:
+  - prompt: >-
+      Na construção de um pipeline com o Apache Beam SDK (base do
+      Dataflow), o que é uma `PCollection`?
+    source_url: https://cloud.google.com/dataflow/docs/concepts/beam-programming-model
+    verified: true
+    choices:
+      - text: >-
+          Um dataset potencialmente distribuído e multi-elemento que
+          representa os dados do pipeline, podendo ser limitado (batch) ou
+          ilimitado (streaming)
+        correct: true
+        explanation: >-
+          `PCollection` é a estrutura de dados fundamental do Beam — os
+          transforms usam objetos `PCollection` como entrada e saída em
+          cada etapa. Ela pode ser bounded (tamanho fixo, batch) ou
+          unbounded (atualização contínua, streaming).
+      - text: Uma tabela física criada no BigQuery pra armazenar resultados intermediários
+        correct: false
+        explanation: >-
+          `PCollection` é uma abstração em memória do modelo de
+          programação do Beam, não uma tabela física persistida em nenhum
+          serviço de armazenamento.
+      - text: Um cluster de máquinas virtuais que executa o pipeline
+        correct: false
+        explanation: >-
+          Isso descreve a infraestrutura de execução (workers), não a
+          estrutura de dados que representa o conteúdo processado pelo
+          pipeline.
+      - text: O arquivo de configuração YAML que define as etapas do pipeline
+        correct: false
+        explanation: >-
+          Pipelines do Beam são definidos em código (Java/Python/Go), não
+          em YAML — e `PCollection` é uma estrutura de dados em tempo de
+          execução, não um arquivo de configuração.
+
+  - prompt: >-
+      Ao construir um pipeline com Apache Beam, qual é a operação central
+      de processamento paralelo que aplica uma função definida pelo
+      usuário (`DoFn`) em cada elemento de uma `PCollection`?
+    source_url: https://cloud.google.com/dataflow/docs/concepts/beam-programming-model
+    verified: true
+    choices:
+      - text: ParDo
+        correct: true
+        explanation: >-
+          `ParDo` é a operação de processamento paralelo central dos SDKs
+          do Apache Beam — ela invoca uma função especificada pelo usuário
+          (um `DoFn`) em cada elemento da `PCollection` de entrada.
+      - text: GroupByKey
+        correct: false
+        explanation: >-
+          `GroupByKey` agrupa elementos por chave — é um transform
+          específico de agregação, não a operação central e genérica de
+          aplicar uma função por elemento.
+      - text: Sink
+        correct: false
+        explanation: >-
+          Sink é o destino final dos dados processados (ex: escrever no
+          BigQuery), não uma operação de transformação por elemento.
+      - text: Watermark
+        correct: false
+        explanation: >-
+          Watermark é um conceito de completude temporal de janelas em
+          streaming, não uma operação de processamento por elemento.
+
+  - prompt: >-
+      Uma equipe precisa rodar jobs Spark/Hadoop já existentes no GCP,
+      criando e destruindo o cluster sob demanda pra não pagar por
+      capacidade ociosa. Qual característica do Dataproc viabiliza esse
+      padrão de cluster efêmero?
+    source_url: https://cloud.google.com/dataproc/docs/concepts/overview
+    verified: true
+    choices:
+      - text: >-
+          Operações de criar, escalar e desligar o cluster levam em média
+          90 segundos ou menos
+        correct: true
+        explanation: >-
+          A documentação do Dataproc destaca que clusters são rápidos de
+          iniciar, escalar e desligar, com cada uma dessas operações
+          levando em média 90 segundos ou menos — isso viabiliza o padrão
+          de subir o cluster só pra rodar o job e derrubar em seguida, sem
+          pagar por capacidade ociosa.
+      - text: O Dataproc não usa clusters — é inteiramente serverless
+        correct: false
+        explanation: >-
+          O contrário: Dataproc é um serviço gerenciado, mas não
+          serverless — você cria e gerencia os clusters (o Google cuida da
+          infraestrutura por trás), diferente de um modelo totalmente sem
+          cluster.
+      - text: O Dataproc só suporta clusters permanentes, sem opção de desligar
+        correct: false
+        explanation: >-
+          Justamente o oposto — a documentação recomenda desligar o
+          cluster quando não estiver em uso, pra evitar gasto com
+          capacidade ociosa (padrão de cluster efêmero).
+      - text: O Dataproc roda exclusivamente frameworks proprietários do Google, não open-source
+        correct: false
+        explanation: >-
+          O Dataproc roda frameworks open-source consagrados —
+          Apache Spark, Hadoop, Hive e Pig — não frameworks proprietários.

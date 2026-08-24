@@ -1,0 +1,139 @@
+certification: gcp-pde
+domain_slug: preparing-analysis
+topic_slug: preparacao-visualizacao
+
+questions:
+  - prompt: >-
+      O que é o BigQuery BI Engine?
+    source_url: https://cloud.google.com/bigquery/docs/bi-engine-intro
+    verified: true
+    choices:
+      - text: >-
+          Um serviço de análise em memória, rápido, que acelera consultas
+          SQL cacheando de forma inteligente os dados mais usados
+        correct: true
+        explanation: >-
+          BI Engine é descrito como um serviço de análise em memória
+          (in-memory) que acelera consultas SQL no BigQuery cacheando de
+          forma inteligente os dados usados com mais frequência.
+      - text: Um serviço de ETL gerenciado pra carregar dados de fontes externas no BigQuery
+        correct: false
+        explanation: >-
+          Isso descreve um serviço de ingestão/ETL — BI Engine é sobre
+          acelerar consultas já dentro do BigQuery, não sobre carregar
+          dados de fontes externas.
+      - text: Um sistema de controle de acesso (IAM) específico pra dashboards de BI
+        correct: false
+        explanation: >-
+          BI Engine não é um mecanismo de controle de acesso — é um
+          serviço de aceleração de performance de consultas.
+      - text: Uma ferramenta de visualização de dados que substitui o Looker Studio
+        correct: false
+        explanation: >-
+          BI Engine não é uma ferramenta de visualização — ele acelera
+          consultas que ferramentas de visualização (Looker Studio, Looker,
+          Tableau, Power BI) fazem contra o BigQuery.
+
+  - prompt: >-
+      Uma equipe já usa Tableau conectado ao BigQuery via driver ODBC pra
+      seus dashboards. Ela precisa mudar a ferramenta de BI ou reconfigurar
+      a conexão pra se beneficiar da aceleração do BI Engine?
+    source_url: https://cloud.google.com/bigquery/docs/bi-engine-intro
+    verified: true
+    choices:
+      - text: >-
+          Não — qualquer solução de BI que use a API do BigQuery via REST,
+          JDBC ou ODBC pode usar o BI Engine sem modificação
+        correct: true
+        explanation: >-
+          A documentação afirma que qualquer solução de BI ou aplicação
+          customizada que trabalhe com a API do BigQuery via mecanismos
+          padrão (REST, JDBC, ODBC) pode usar o BI Engine sem modificação —
+          Looker, Data Studio/Looker Studio, Tableau e Power BI são citados
+          explicitamente.
+      - text: Sim — só o Looker Studio tem suporte oficial ao BI Engine
+        correct: false
+        explanation: >-
+          O suporte não é exclusivo do Looker Studio — a documentação cita
+          explicitamente Tableau e Power BI como ferramentas compatíveis,
+          além de qualquer solução que use REST/JDBC/ODBC.
+      - text: Sim — é preciso migrar os dashboards pro Looker (não Looker Studio)
+        correct: false
+        explanation: >-
+          Não há essa exigência de migração — a compatibilidade é ampla,
+          baseada no mecanismo de conexão (REST/JDBC/ODBC), não na
+          ferramenta de BI específica.
+      - text: Não é possível usar BI Engine com Tableau em nenhuma configuração
+        correct: false
+        explanation: >-
+          O oposto: Tableau é citado explicitamente como uma das
+          ferramentas compatíveis com BI Engine.
+
+  - prompt: >-
+      Uma consulta de BI faz join entre uma tabela fato grande e uma tabela
+      de dimensão com 8 milhões de linhas. Pelos limites documentados do BI
+      Engine pra aceleração de joins, o que acontece?
+    source_url: https://cloud.google.com/bigquery/docs/bi-engine-intro
+    verified: true
+    choices:
+      - text: >-
+          A tabela de dimensão excede o limite de 5 milhões de linhas pra
+          aceleração de join, então essa consulta não é acelerada dessa forma
+        correct: true
+        explanation: >-
+          Pra joins, o BI Engine exige que tabelas de dimensão tenham
+          menos de 5 milhões de linhas (e até 5 GiB, ou 1 GiB se for uma
+          referência particionada) — 8 milhões de linhas excede esse
+          limite.
+      - text: Não há limite de tamanho de tabela de dimensão pra joins no BI Engine
+        correct: false
+        explanation: >-
+          Existe sim um limite documentado: menos de 5 milhões de linhas
+          (e restrição de tamanho em GiB) pra tabelas de dimensão em joins
+          acelerados pelo BI Engine.
+      - text: O BI Engine converte automaticamente a tabela de dimensão em uma view materializada pra contornar o limite
+        correct: false
+        explanation: >-
+          Não há essa conversão automática documentada — via de regra, uma
+          tabela de dimensão acima do limite simplesmente não se qualifica
+          pra aceleração de join do BI Engine.
+      - text: O limite de linhas só se aplica a tabelas fato, nunca a tabelas de dimensão
+        correct: false
+        explanation: >-
+          É o contrário — o limite de linhas documentado (5 milhões) é
+          especificamente sobre a tabela de DIMENSÃO no join, não a tabela
+          fato.
+
+  - prompt: >-
+      Qual abordagem a documentação do BigQuery recomenda pra combinar BI
+      Engine com views materializadas num cenário de BI com joins
+      recorrentes entre várias tabelas?
+    source_url: https://cloud.google.com/bigquery/docs/bi-engine-intro
+    verified: true
+    choices:
+      - text: >-
+          Usar uma view materializada pra pré-computar os joins numa
+          tabela única e achatada, e deixar o BI Engine acelerar as
+          consultas em cima dela
+        correct: true
+        explanation: >-
+          A documentação recomenda combinar os dois: views materializadas
+          fazem os joins pra produzir uma única tabela grande e achatada,
+          e o BI Engine acelera consultas sobre ela — evitando repetir os
+          joins a cada consulta, com performance ótima.
+      - text: Nunca usar os dois juntos — BI Engine e views materializadas são mutuamente exclusivos
+        correct: false
+        explanation: >-
+          A documentação recomenda justamente o oposto: combinar os dois é
+          uma prática indicada pra performance ótima em cenários com joins
+          recorrentes.
+      - text: Usar o BI Engine pra fazer os joins, e a view materializada só pra cache
+        correct: false
+        explanation: >-
+          É o papel inverso — quem faz o join é a view materializada (pré-computando uma tabela achatada); o BI Engine entra depois, cacheando/acelerando consultas sobre o resultado.
+      - text: Substituir totalmente as views materializadas por tabelas particionadas antes de habilitar o BI Engine
+        correct: false
+        explanation: >-
+          Não há essa recomendação — particionamento é uma técnica
+          separada; a combinação documentada especificamente pra esse
+          cenário é BI Engine + views materializadas.

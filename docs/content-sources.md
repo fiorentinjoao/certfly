@@ -15,6 +15,13 @@ de certificação reais (braindumps), mesmo que apareçam numa busca.
 | Tópico (slug) | URLs oficiais |
 |---|---|
 | `bigquery` | https://cloud.google.com/bigquery/docs/partitioned-tables · https://cloud.google.com/bigquery/docs/clustered-tables · https://cloud.google.com/bigquery/docs/external-data-cloud-storage |
+| `bancos-operacionais` | https://cloud.google.com/sql/docs/mysql/high-availability · https://cloud.google.com/alloydb/docs/columnar-engine/about |
+| `planejamento-pipelines` | https://cloud.google.com/dataflow/docs/concepts/streaming-pipelines |
+| `construcao-pipelines` | https://cloud.google.com/dataflow/docs/concepts/beam-programming-model · https://cloud.google.com/dataproc/docs/concepts/overview |
+| `deploy-operacionalizacao` | https://cloud.google.com/composer/docs/composer-2/composer-overview · https://cloud.google.com/dataflow/docs/concepts/dataflow-templates |
+| `preparacao-visualizacao` | https://cloud.google.com/bigquery/docs/bi-engine-intro |
+| `preparacao-ia-ml` | https://cloud.google.com/bigquery/docs/bqml-introduction |
+| `compartilhamento-dados` | https://cloud.google.com/bigquery/docs/analytics-hub-introduction · https://cloud.google.com/bigquery/docs/authorized-views |
 
 ## AWS — Data Engineer Associate (DEA-C01)
 

@@ -1,0 +1,105 @@
+certification: gcp-pde
+domain_slug: ingesting-processing
+topic_slug: planejamento-pipelines
+
+questions:
+  - prompt: >-
+      No planejamento de um pipeline de streaming no Dataflow, o que é um
+      "watermark"?
+    source_url: https://cloud.google.com/dataflow/docs/concepts/streaming-pipelines
+    verified: true
+    choices:
+      - text: >-
+          Um limiar que indica quando o Dataflow espera que todos os dados
+          de uma janela já tenham chegado
+        correct: true
+        explanation: >-
+          O watermark existe porque dados de streaming não têm ordem
+          garantida nem chegada previsível — ele é o limiar de tempo que o
+          Dataflow usa pra decidir quando considerar uma janela "completa".
+      - text: Um checkpoint que salva o estado do pipeline pra recuperação de falha
+        correct: false
+        explanation: >-
+          Isso descreve checkpointing, um mecanismo diferente — watermark é
+          especificamente sobre completude temporal de uma janela, não
+          sobre recuperação de estado.
+      - text: A marca d'água (branding) exibida nos dashboards de monitoramento do pipeline
+        correct: false
+        explanation: >-
+          "Watermark" aqui é um conceito técnico de processamento de
+          streaming, não relacionado a identidade visual ou dashboards.
+      - text: O limite de throughput máximo que o pipeline pode processar por segundo
+        correct: false
+        explanation: >-
+          Isso seria uma métrica de capacidade/vazão — watermark é sobre
+          tempo (quando uma janela pode ser considerada completa), não sobre
+          volume de processamento.
+
+  - prompt: >-
+      Ao planejar um pipeline que precisa calcular uma média móvel
+      atualizada a cada 30 segundos, considerando o último minuto de dados
+      (janelas que se sobrepõem), qual tipo de janela do Dataflow é o
+      adequado?
+    source_url: https://cloud.google.com/dataflow/docs/concepts/streaming-pipelines
+    verified: true
+    choices:
+      - text: Hopping window (janela deslizante)
+        correct: true
+        explanation: >-
+          Hopping windows podem se sobrepor — o exemplo típico é capturar 1
+          minuto de dados começando a cada 30 segundos, exatamente o caso
+          de uma média móvel. Tumbling windows são disjuntas (não servem
+          pra sobreposição).
+      - text: Tumbling window (janela fixa)
+        correct: false
+        explanation: >-
+          Tumbling windows representam intervalos de tempo disjuntos e
+          consistentes (sem sobreposição) — não cobrem o requisito de
+          janelas que se sobrepõem a cada 30 segundos.
+      - text: Session window (janela de sessão)
+        correct: false
+        explanation: >-
+          Session windows agrupam elementos dentro de um gap de inatividade
+          entre eles — servem pra rajadas de atividade separadas por
+          pausas, não pra uma janela de tempo fixa e sobreposta.
+      - text: Global window (janela única, sem particionamento por tempo)
+        correct: false
+        explanation: >-
+          Uma janela global trataria toda a coleção como um único bloco,
+          sem o particionamento temporal necessário pra calcular uma média
+          móvel.
+
+  - prompt: >-
+      Ao planejar como um pipeline lida com "late data" (dado que chega
+      depois do watermark ter avançado além do fim da janela), qual
+      componente do Dataflow controla QUANDO um resultado agregado é emitido?
+    source_url: https://cloud.google.com/dataflow/docs/concepts/streaming-pipelines
+    verified: true
+    choices:
+      - text: Triggers (gatilhos)
+        correct: true
+        explanation: >-
+          Triggers determinam quando emitir resultados agregados conforme
+          os dados chegam. Por padrão, o resultado é emitido quando o
+          watermark ultrapassa o fim da janela, mas triggers podem ser
+          configurados por tempo de evento, tempo de processamento ou
+          contagem de elementos.
+      - text: O watermark sozinho, sem nenhuma configuração adicional
+        correct: false
+        explanation: >-
+          O watermark define quando os dados de uma janela são
+          considerados completos, mas quem decide quando de fato emitir o
+          resultado agregado é o trigger (o comportamento padrão até usa o
+          watermark, mas é o trigger que controla isso).
+      - text: O tipo de sink (destino) configurado no pipeline
+        correct: false
+        explanation: >-
+          O sink só recebe o resultado já processado — ele não controla o
+          timing de emissão da agregação, isso é responsabilidade dos
+          triggers.
+      - text: O número de workers alocados ao job do Dataflow
+        correct: false
+        explanation: >-
+          A quantidade de workers afeta capacidade/paralelismo de
+          processamento, não a lógica de QUANDO um resultado de janela é
+          emitido.

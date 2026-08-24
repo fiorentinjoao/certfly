@@ -1,0 +1,143 @@
+certification: gcp-pde
+domain_slug: ingesting-processing
+topic_slug: deploy-operacionalizacao
+
+questions:
+  - prompt: >-
+      No Cloud Composer, o que é um DAG?
+    source_url: https://cloud.google.com/composer/docs/composer-2/composer-overview
+    verified: true
+    choices:
+      - text: >-
+          Uma coleção de tarefas que você quer agendar e rodar, organizadas
+          de forma a refletir suas relações e dependências
+        correct: true
+        explanation: >-
+          Um DAG (grafo acíclico dirigido) é a unidade central de trabalho
+          no Airflow/Composer — organiza tarefas (preparar dados, monitorar
+          uma API, enviar e-mail, rodar um pipeline) respeitando as
+          dependências entre elas.
+      - text: Uma tabela de metadados que armazena o schema de todas as pipelines
+        correct: false
+        explanation: >-
+          DAG é uma estrutura de orquestração de tarefas, não uma tabela de
+          metadados de schema.
+      - text: O nome do cluster do Kubernetes que executa o Airflow
+        correct: false
+        explanation: >-
+          O cluster GKE é a infraestrutura que roda os componentes do
+          Airflow por trás do Composer — DAG é o conceito de workflow
+          definido pelo usuário, uma camada acima disso.
+      - text: Um tipo de job do BigQuery pra rodar consultas agendadas
+        correct: false
+        explanation: >-
+          Consultas agendadas do BigQuery são um recurso separado
+          (scheduled queries) — DAG é o conceito de orquestração do
+          Composer/Airflow, que pode inclusive orquestrar esses jobs.
+
+  - prompt: >-
+      Ao operacionalizar orquestração de workflows com Cloud Composer, em
+      que tipo de infraestrutura os ambientes gerenciados do Airflow rodam?
+    source_url: https://cloud.google.com/composer/docs/composer-2/composer-overview
+    verified: true
+    choices:
+      - text: Clusters do Google Kubernetes Engine (GKE), provisionados e gerenciados pelo serviço
+        correct: true
+        explanation: >-
+          Ambientes gerenciados do Airflow são deployments baseados em GKE
+          — o Composer usa o GKE pra criar, gerenciar e deletar os
+          clusters de ambiente onde os componentes do Airflow rodam. O
+          usuário não traz seu próprio cluster, banco ou registry.
+      - text: Máquinas virtuais únicas (single VM), sem orquestração de containers
+        correct: false
+        explanation: >-
+          O modelo é baseado em GKE (Kubernetes), não uma VM única — isso
+          é o que permite escalar os componentes do Airflow de forma
+          gerenciada.
+      - text: Cloud Functions, de forma totalmente serverless
+        correct: false
+        explanation: >-
+          Composer não é baseado em Cloud Functions — a arquitetura
+          documentada é especificamente GKE, com um cluster rodando os
+          componentes do Airflow.
+      - text: Infraestrutura on-premises conectada via VPN
+        correct: false
+        explanation: >-
+          Cloud Composer é um serviço totalmente gerenciado no Google
+          Cloud, rodando em GKE — não depende de infraestrutura
+          on-premises do cliente.
+
+  - prompt: >-
+      Qual é a principal vantagem de operacionalizar um pipeline do
+      Dataflow como um TEMPLATE, em vez de exigir que quem for rodar o
+      pipeline tenha o ambiente de desenvolvimento e as dependências
+      instaladas?
+    source_url: https://cloud.google.com/dataflow/docs/concepts/dataflow-templates
+    verified: true
+    choices:
+      - text: >-
+          Templates separam o design do pipeline do deploy — dá pra
+          implantar via console, CLI ou API, sem ambiente de
+          desenvolvimento nem dependências locais
+        correct: true
+        explanation: >-
+          Um desenvolvedor cria o template, e outra pessoa (ex: um
+          cientista de dados) pode implantá-lo depois, via Console, gcloud
+          CLI ou chamadas REST — sem precisar de ambiente de
+          desenvolvimento nem das dependências do pipeline instaladas
+          localmente.
+      - text: Templates eliminam completamente a necessidade de workers pra executar o job
+        correct: false
+        explanation: >-
+          Templates mudam COMO o pipeline é empacotado e implantado, não
+          eliminam a necessidade de workers rodando o processamento em si.
+      - text: Templates só funcionam para pipelines batch, nunca streaming
+        correct: false
+        explanation: >-
+          Não há essa restrição documentada — templates (clássicos ou
+          Flex) empacotam pipelines Dataflow em geral, não são exclusivos
+          de um modo de processamento.
+      - text: Templates substituem a necessidade de definir um DAG no Composer
+        correct: false
+        explanation: >-
+          São conceitos de camadas diferentes: template é sobre empacotar
+          e implantar UM pipeline do Dataflow; DAG é sobre orquestrar
+          MÚLTIPLAS tarefas/dependências (que pode incluir disparar um
+          desses templates).
+
+  - prompt: >-
+      Qual é uma diferença real entre Flex Templates e Classic Templates no
+      Dataflow?
+    source_url: https://cloud.google.com/dataflow/docs/concepts/dataflow-templates
+    verified: true
+    choices:
+      - text: >-
+          Flex Templates não exigem a interface ValueProvider pra
+          parâmetros de entrada e conseguem construir o job graph
+          dinamicamente; Classic Templates serializam o job graph como
+          JSON estático e exigem ValueProvider
+        correct: true
+        explanation: >-
+          Documentação oficial: diferente dos Classic Templates, Flex
+          Templates não exigem ValueProvider pros parâmetros de entrada e
+          podem construir o job graph de forma dinâmica (não estática).
+          Flex Templates também são empacotados como imagem Docker no
+          Artifact Registry, com um arquivo de especificação no Cloud
+          Storage.
+      - text: Classic Templates são mais novos e recomendados; Flex Templates estão sendo descontinuados
+        correct: false
+        explanation: >-
+          É o oposto: Flex Templates são o formato recomendado pra
+          trabalho novo, segundo a documentação atual.
+      - text: Flex Templates só podem ser criados via Console, nunca via CLI
+        correct: false
+        explanation: >-
+          Não há essa restrição — a diferença documentada entre os dois
+          tipos é sobre empacotamento (Docker image vs JSON estático) e
+          uso de ValueProvider, não sobre qual ferramenta de deploy usar.
+      - text: Classic Templates suportam pré-processamento em VMs durante a construção do pipeline; Flex Templates não
+        correct: false
+        explanation: >-
+          É o contrário — essa capacidade de pré-processamento em VMs
+          durante a construção do pipeline é atribuída aos Flex Templates,
+          não aos Classic Templates.

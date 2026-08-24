@@ -1,0 +1,139 @@
+certification: gcp-pde
+domain_slug: preparing-analysis
+topic_slug: preparacao-ia-ml
+
+questions:
+  - prompt: >-
+      Uma equipe quer segmentar clientes em grupos com comportamento de
+      compra parecido, sem ter rótulos prévios (aprendizado não
+      supervisionado). Qual tipo de modelo do BigQuery ML é adequado?
+    source_url: https://cloud.google.com/bigquery/docs/bqml-introduction
+    verified: true
+    choices:
+      - text: K-means clustering
+        correct: true
+        explanation: >-
+          O BigQuery ML documenta k-means clustering especificamente pra
+          segmentação de dados — é o tipo de modelo indicado pra agrupar
+          registros parecidos sem rótulos prévios.
+      - text: Regressão linear
+        correct: false
+        explanation: >-
+          Regressão linear é pra prever uma métrica numérica contínua
+          (aprendizado supervisionado com rótulo), não pra segmentar grupos
+          sem rótulo.
+      - text: Regressão logística
+        correct: false
+        explanation: >-
+          Regressão logística classifica entre dois ou mais valores
+          possíveis conhecidos previamente — também é supervisionado, não
+          serve pra segmentação sem rótulo.
+      - text: Análise de componentes principais (PCA)
+        correct: false
+        explanation: >-
+          PCA é usado pra redução de dimensionalidade (reduzir o número de
+          variáveis mantendo a informação relevante), não especificamente
+          pra segmentar clientes em grupos.
+
+  - prompt: >-
+      Qual é a principal vantagem de treinar um modelo com BigQuery ML
+      usando `CREATE MODEL`, do ponto de vista de quem já trabalha com
+      dados no BigQuery?
+    source_url: https://cloud.google.com/bigquery/docs/bqml-introduction
+    verified: true
+    choices:
+      - text: >-
+          Treinar e acessar recursos de ML usando SQL, uma linguagem já
+          familiar pra analistas de dados
+        correct: true
+        explanation: >-
+          A documentação enfatiza justamente isso: você treina modelos e
+          acessa recursos de IA usando SQL — uma linguagem que analistas de
+          dados já dominam, sem precisar aprender uma linguagem de ML
+          separada (como Python) pra treinar um modelo básico.
+      - text: É a única forma de treinar modelos de machine learning no Google Cloud
+        correct: false
+        explanation: >-
+          Não é a única forma — o GCP tem outras plataformas de ML fora do
+          BigQuery; a vantagem do BigQuery ML é especificamente permitir
+          treinar via SQL sem sair do BigQuery, não ser a única opção do
+          GCP.
+      - text: Elimina totalmente a necessidade de qualquer preparação prévia dos dados
+        correct: false
+        explanation: >-
+          Não há essa eliminação documentada — preparar os dados
+          (limpeza, seleção de features) continua sendo parte do
+          processo, só a etapa de treino em si é feita via SQL.
+      - text: Garante automaticamente a melhor acurácia possível pra qualquer caso de uso
+        correct: false
+        explanation: >-
+          O BigQuery ML facilita o TREINO via SQL, mas não garante
+          "melhor acurácia automática" — a escolha do tipo de modelo e a
+          qualidade dos dados ainda afetam o resultado.
+
+  - prompt: >-
+      Uma equipe já tem um modelo treinado externamente em TensorFlow e
+      quer usá-lo pra fazer predições direto no BigQuery, sem re-treinar
+      do zero em SQL. Isso é possível?
+    source_url: https://cloud.google.com/bigquery/docs/bqml-introduction
+    verified: true
+    choices:
+      - text: >-
+          Sim — o BigQuery ML suporta importar modelos já treinados nos
+          formatos ONNX, TensorFlow, TensorFlow Lite ou XGBoost
+        correct: true
+        explanation: >-
+          Além dos modelos treinados internamente via SQL, o BigQuery ML
+          suporta modelos IMPORTADOS — customizados, treinados fora do
+          BigQuery, nos formatos ONNX, TensorFlow, TensorFlow Lite ou
+          XGBoost, carregados do Cloud Storage.
+      - text: Não — o BigQuery ML só aceita modelos treinados internamente via CREATE MODEL
+        correct: false
+        explanation: >-
+          O BigQuery ML tem uma categoria específica de "modelos
+          importados" justamente pra esse cenário — modelos treinados
+          externamente não precisam ser retreinados em SQL pra rodar no
+          BigQuery.
+      - text: Sim, mas só se o modelo for reescrito manualmente em SQL antes de importar
+        correct: false
+        explanation: >-
+          Não há essa exigência de reescrita — a importação suporta os
+          formatos de arquivo do modelo diretamente (ONNX, TensorFlow,
+          TFLite, XGBoost), sem precisar converter a lógica pra SQL.
+      - text: Não — modelos externos só podem ser usados fora do BigQuery, nunca importados pra ele
+        correct: false
+        explanation: >-
+          É o oposto — importar modelos externos pro BigQuery (a partir do
+          Cloud Storage, nos formatos suportados) é um recurso documentado
+          do BigQuery ML.
+
+  - prompt: >-
+      Uma equipe precisa prever um valor numérico contínuo (ex: receita
+      esperada do próximo mês) usando dados históricos rotulados. Qual
+      tipo de modelo do BigQuery ML é o indicado pra esse cenário?
+    source_url: https://cloud.google.com/bigquery/docs/bqml-introduction
+    verified: true
+    choices:
+      - text: Regressão linear
+        correct: true
+        explanation: >-
+          A documentação descreve regressão linear especificamente pra
+          prever métricas numéricas — o caso de uma previsão de valor
+          contínuo como receita esperada.
+      - text: Regressão logística
+        correct: false
+        explanation: >-
+          Regressão logística é pra classificar entre dois ou mais valores
+          possíveis (categorias), não pra prever um valor numérico
+          contínuo.
+      - text: K-means clustering
+        correct: false
+        explanation: >-
+          K-means é pra segmentação/agrupamento sem rótulo, não pra
+          prever um valor numérico com base em dados históricos rotulados.
+      - text: Fatoração de matriz (matrix factorization)
+        correct: false
+        explanation: >-
+          Fatoração de matriz é indicada pra sistemas de recomendação de
+          produtos, um caso de uso diferente de prever um valor numérico
+          contínuo.
