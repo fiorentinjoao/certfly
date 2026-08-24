@@ -176,6 +176,27 @@ def get_topic_question_ids(db: Session, topic_id: uuid.UUID) -> list[uuid.UUID]:
     )
 
 
+def get_question_ids_by_topics(
+    db: Session, topic_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, list[uuid.UUID]]:
+    """Igual a `get_topic_question_ids`, mas para vários tópicos numa única
+    query — usado por topic_mastery.compute_many pra evitar 1 query por
+    tópico ao calcular mastery de uma certificação inteira (N+1)."""
+    if not topic_ids:
+        return {}
+
+    rows = db.execute(
+        select(QuestionORM.topic_id, QuestionORM.id).where(
+            QuestionORM.topic_id.in_(topic_ids), QuestionORM.status == "active"
+        )
+    ).all()
+
+    result: dict[uuid.UUID, list[uuid.UUID]] = {topic_id: [] for topic_id in topic_ids}
+    for topic_id, question_id in rows:
+        result[topic_id].append(question_id)
+    return result
+
+
 def get_questions_with_choices(
     db: Session, question_ids: list[uuid.UUID]
 ) -> list[tuple[entities.Question, list[entities.Choice]]]:

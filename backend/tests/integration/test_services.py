@@ -13,6 +13,7 @@ from app.services import (
     lesson_service,
     progress_service,
     session_service,
+    topic_mastery,
 )
 
 TODAY = date(2026, 8, 9)
@@ -226,6 +227,86 @@ def test_entry_point_usa_o_menor_order_nao_o_literal_1(db_session, seed_topic):
     # não só a leitura de progresso.
     lesson = lesson_service.start_lesson(db_session, user_id, topic.id, TODAY, NOW)
     assert len(lesson.questions) == 2
+
+
+def _count_queries(db_session):
+    """Context manager que conta quantos SELECTs/statements a sessão
+    executa dentro do bloco — usado pra travar que o cálculo de mastery de
+    uma certificação não escala com o número de tópicos (regressão de N+1,
+    ver topic_mastery.compute_many)."""
+    from contextlib import contextmanager
+
+    from sqlalchemy import event
+
+    @contextmanager
+    def _ctx():
+        count = [0]
+        engine = db_session.get_bind()
+
+        def _on_execute(*_args, **_kwargs):
+            count[0] += 1
+
+        event.listen(engine, "before_cursor_execute", _on_execute)
+        try:
+            yield count
+        finally:
+            event.remove(engine, "before_cursor_execute", _on_execute)
+
+    return _ctx()
+
+
+def test_compute_many_mastery_nao_escala_queries_com_numero_de_topicos(
+    db_session, seed_topic
+):
+    # Regressão de N+1: topic_mastery.compute chamado num loop por tópico
+    # (via certifications_service/progress_service) custava 2 queries POR
+    # TÓPICO — uma certificação com N tópicos custava O(N) round-trips só
+    # pra mastery. compute_many faz o mesmo cálculo em 2 queries no total,
+    # não importa quantos tópicos.
+    topic, _questions = seed_topic(2, domain_order=1, topic_order=1)
+    topic_ids = [topic.id]
+    for i in range(2, 9):  # +7 tópicos (total: 8) — se fosse O(N), 16 queries
+        new_topic = _add_topic_after(db_session, topic, topic_order=i)
+        topic_ids.append(new_topic.id)
+    user_id = _new_user(db_session)
+
+    with _count_queries(db_session) as count:
+        snapshots = topic_mastery.compute_many(db_session, user_id, topic_ids, TODAY)
+
+    assert len(snapshots) == 8
+    assert (
+        count[0] == 2
+    )  # get_question_ids_by_topics + srs_state.get_all_for_topic, sempre
+
+
+def test_progress_service_usa_compute_many_nao_compute_por_topico(
+    db_session, seed_topic, monkeypatch
+):
+    # Trava que get_certification_progress delega pro batching, e não
+    # voltou silenciosamente a chamar topic_mastery.compute (a versão
+    # antiga, O(N)) num loop.
+    topic, _questions = seed_topic(2, domain_order=1, topic_order=1)
+    for i in range(2, 5):
+        _add_topic_after(db_session, topic, topic_order=i)
+    user_id = _new_user(db_session)
+    certification_id = _certification_id_of(db_session, topic)
+
+    calls = []
+    original_compute = topic_mastery.compute
+    monkeypatch.setattr(
+        topic_mastery,
+        "compute",
+        lambda *a, **k: calls.append(1) or original_compute(*a, **k),
+    )
+
+    progress = progress_service.get_certification_progress(
+        db_session, user_id, certification_id, TODAY
+    )
+
+    assert len(progress[0].topics) == 4
+    assert (
+        calls == []
+    )  # compute() (por tópico) não deveria ter sido chamado nenhuma vez
 
 
 def test_mastery_reflete_questoes_ja_respondidas(db_session, seed_topic):
