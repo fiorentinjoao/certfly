@@ -3,6 +3,7 @@
 import uuid
 from datetime import datetime
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.entities import LessonSession, UserTopicProgress
@@ -20,15 +21,26 @@ def create(
     return mappers.lesson_session_to_entity(row)
 
 
-def get(db: Session, session_id: uuid.UUID) -> LessonSession | None:
-    row = db.get(LessonSessionORM, session_id)
+def get(db: Session, session_id: uuid.UUID, user_id: uuid.UUID) -> LessonSession | None:
+    """Busca sempre escopada ao dono da sessão — nunca só pelo `session_id`,
+    senão qualquer usuário autenticado poderia ler/completar a sessão de
+    outro (IDOR: ver revisão de segurança)."""
+    row = db.scalar(
+        select(LessonSessionORM).where(
+            LessonSessionORM.id == session_id, LessonSessionORM.user_id == user_id
+        )
+    )
     return mappers.lesson_session_to_entity(row) if row else None
 
 
 def complete(
-    db: Session, session_id: uuid.UUID, *, completed_at: datetime, xp_earned: int
+    db: Session, session_id: uuid.UUID, user_id: uuid.UUID, *, completed_at: datetime, xp_earned: int
 ) -> LessonSession:
-    row = db.get(LessonSessionORM, session_id)
+    row = db.scalar(
+        select(LessonSessionORM).where(
+            LessonSessionORM.id == session_id, LessonSessionORM.user_id == user_id
+        )
+    )
     if row is None:
         raise ValueError(f"lesson_session {session_id} não encontrada")
 
