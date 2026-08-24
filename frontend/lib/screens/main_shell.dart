@@ -76,7 +76,11 @@ class _MainShellState extends State<MainShell> {
             activeCertificationId: _activeCertificationId,
             onSelect: _onSelectCertification,
           ),
-          ProfileScreen(apiClient: widget.apiClient, onLogout: widget.onLogout),
+          ProfileScreen(
+            apiClient: widget.apiClient,
+            onLogout: widget.onLogout,
+            onGoToCertifications: () => setState(() => _current = AppTab.certifications),
+          ),
         ],
       ),
       bottomNavigationBar: CertFlyBottomNav(

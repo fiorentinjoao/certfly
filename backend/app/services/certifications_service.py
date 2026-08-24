@@ -34,13 +34,11 @@ def get_certifications_overview(
 
         # % geral = média do mastery de cada tópico — mesmo cálculo por
         # tópico usado em GET /certification/{id}/progress (topic_mastery.
-        # compute), só que agregado. Certificação sem tópico nenhum ainda
-        # (conteúdo não escrito) mostra 0%, não erro.
+        # compute_many), só que agregado. Certificação sem tópico nenhum
+        # ainda (conteúdo não escrito) mostra 0%, não erro.
         if topic_ids:
-            mastery_values = [
-                topic_mastery.compute(db, user_id, topic_id, today).mastery_pct
-                for topic_id in topic_ids
-            ]
+            snapshots = topic_mastery.compute_many(db, user_id, topic_ids, today)
+            mastery_values = [snapshots[topic_id].mastery_pct for topic_id in topic_ids]
             overall = sum(mastery_values) / len(mastery_values)
         else:
             overall = 0.0

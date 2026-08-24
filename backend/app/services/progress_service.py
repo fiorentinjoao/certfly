@@ -30,11 +30,19 @@ def get_certification_progress(
 ) -> list[DomainProgress]:
     domains_with_topics = catalog.get_domains_with_topics(db, certification_id)
 
+    # Uma query pra mastery de todos os tópicos da certificação, não uma
+    # por tópico (topic_mastery.compute_many — ver docstring lá pro N+1
+    # que isso evita).
+    all_topic_ids = [
+        topic.id for _domain, topics in domains_with_topics for topic in topics
+    ]
+    mastery_snapshots = topic_mastery.compute_many(db, user_id, all_topic_ids, today)
+
     result: list[DomainProgress] = []
     for domain, topics in domains_with_topics:
         topic_progresses = []
         for topic in topics:
-            snapshot = topic_mastery.compute(db, user_id, topic.id, today)
+            snapshot = mastery_snapshots[topic.id]
             persisted_progress = lesson_sessions.get_topic_progress(
                 db, user_id, topic.id
             )
