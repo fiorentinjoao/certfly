@@ -243,6 +243,75 @@ domains:
         correct: false
         explanation: Firestore é um banco de documentos NoSQL — não tem relação com
           compatibilidade Postgres nem com o perfil HTAP do cenário.
+    - prompt: Uma instância do Cloud SQL configurada com alta disponibilidade (HA)
+        tem sua instância primária parando de responder. Como o Cloud SQL detecta
+        isso e o que acontece em seguida?
+      choices:
+      - text: Um sistema de heartbeat verifica a cada segundo; sem múltiplos heartbeats,
+          a instância standby assume automaticamente como nova primária
+        correct: true
+        explanation: O Cloud SQL roda um heartbeat a cada segundo contra a instância
+          primária; se vários heartbeats falharem, o failover é iniciado e a standby
+          (na outra zona) assume como primária, servindo dados da zona secundária.
+      - text: Um administrador precisa promover manualmente a instância standby
+        correct: false
+        explanation: O failover é automático — só o failback (voltar a usar a instância
+          original depois que ela se recupera) precisa ser disparado manualmente.
+      - text: A instância primária é recriada do zero na mesma zona
+        correct: false
+        explanation: 'Não há recriação: a arquitetura HA já mantém uma standby pronta
+          replicada de forma síncrona; o failover só troca qual delas serve o tráfego
+          (via IP compartilhado).'
+      - text: O Cloud SQL espera a instância primária voltar sozinha, sem failover
+        correct: false
+        explanation: 'O contrário: a ausência de heartbeats é o próprio gatilho do
+          failover automático, não uma espera passiva.'
+    - prompt: A configuração de alta disponibilidade (HA) do Cloud SQL protege contra
+        qual tipo de falha?
+      choices:
+      - text: Falha de uma zona dentro da MESMA região (primária e standby em zonas
+          diferentes)
+        correct: true
+        explanation: A HA do Cloud SQL opera dentro de uma única região, distribuindo
+          primária e standby em zonas diferentes — não é uma configuração multi-região.
+      - text: Falha de uma região inteira, com failover automático pra outra região
+        correct: false
+        explanation: O escopo da HA é intra-região (entre zonas), não entre regiões
+          — mover uma instância entre zonas, inclusive, causa downtime.
+      - text: Apenas falhas de rede do cliente que acessa o banco
+        correct: false
+        explanation: HA protege a disponibilidade da própria instância de banco, não
+          problemas de conectividade do lado do cliente.
+      - text: Apenas corrupção de dados causada por erro de aplicação
+        correct: false
+        explanation: HA é sobre disponibilidade da instância (a réplica standby tem
+          os mesmos dados, incluindo erros já commitados) — não é uma proteção contra
+          erro lógico de aplicação, isso é papel de backup/point-in-time recovery.
+    - prompt: O que é a "auto-columnarização" do mecanismo columnar engine do AlloyDB?
+      choices:
+      - text: O AlloyDB analisa automaticamente a carga de trabalho e adiciona colunas
+          ao column store sem intervenção manual
+        correct: true
+        explanation: 'Além da seleção manual de colunas por um administrador, o columnar
+          engine oferece auto-columnarização: o sistema analisa o workload e adiciona
+          colunas ao column store sozinho, por padrão usando até 30% da memória da
+          instância pra isso.'
+      - text: O AlloyDB converte automaticamente toda a tabela pra formato colunar
+          permanente
+        correct: false
+        explanation: Não é a tabela inteira nem permanente — o engine mantém um column
+          store separado só com colunas selecionadas (manual ou automaticamente),
+          coexistindo com o armazenamento linha-a-linha original.
+      - text: É um processo manual que exige reescrever o schema da tabela
+        correct: false
+        explanation: É o oposto do processo manual — "auto" aqui significa justamente
+          que não exige intervenção manual de schema; a seleção manual de colunas
+          é a OUTRA opção, separada da automática.
+      - text: Serve só pra tabelas particionadas ou com poucas linhas
+        correct: false
+        explanation: 'É o contrário: o columnar engine não processa diretamente tabelas
+          particionadas, tabelas externas (foreign tables) nem tabelas pequenas (tipicamente
+          abaixo de 5.000 linhas).'
 - name: Ingesting and processing the data
   slug: ingesting-processing
   weight_pct: 25
@@ -293,6 +362,77 @@ domains:
         explanation: Streaming resolveria, mas é mais complexo/caro do que o necessário
           pra um caso que já é batch por natureza (arquivos chegando, não eventos
           individuais) — o gatilho orientado a evento é o encaixe mais direto.
+    - prompt: No planejamento de um pipeline de streaming no Dataflow, o que é um
+        "watermark"?
+      choices:
+      - text: Um limiar que indica quando o Dataflow espera que todos os dados de
+          uma janela já tenham chegado
+        correct: true
+        explanation: O watermark existe porque dados de streaming não têm ordem garantida
+          nem chegada previsível — ele é o limiar de tempo que o Dataflow usa pra
+          decidir quando considerar uma janela "completa".
+      - text: Um checkpoint que salva o estado do pipeline pra recuperação de falha
+        correct: false
+        explanation: Isso descreve checkpointing, um mecanismo diferente — watermark
+          é especificamente sobre completude temporal de uma janela, não sobre recuperação
+          de estado.
+      - text: A marca d'água (branding) exibida nos dashboards de monitoramento do
+          pipeline
+        correct: false
+        explanation: '"Watermark" aqui é um conceito técnico de processamento de streaming,
+          não relacionado a identidade visual ou dashboards.'
+      - text: O limite de throughput máximo que o pipeline pode processar por segundo
+        correct: false
+        explanation: Isso seria uma métrica de capacidade/vazão — watermark é sobre
+          tempo (quando uma janela pode ser considerada completa), não sobre volume
+          de processamento.
+    - prompt: Ao planejar um pipeline que precisa calcular uma média móvel atualizada
+        a cada 30 segundos, considerando o último minuto de dados (janelas que se
+        sobrepõem), qual tipo de janela do Dataflow é o adequado?
+      choices:
+      - text: Hopping window (janela deslizante)
+        correct: true
+        explanation: Hopping windows podem se sobrepor — o exemplo típico é capturar
+          1 minuto de dados começando a cada 30 segundos, exatamente o caso de uma
+          média móvel. Tumbling windows são disjuntas (não servem pra sobreposição).
+      - text: Tumbling window (janela fixa)
+        correct: false
+        explanation: Tumbling windows representam intervalos de tempo disjuntos e
+          consistentes (sem sobreposição) — não cobrem o requisito de janelas que
+          se sobrepõem a cada 30 segundos.
+      - text: Session window (janela de sessão)
+        correct: false
+        explanation: Session windows agrupam elementos dentro de um gap de inatividade
+          entre eles — servem pra rajadas de atividade separadas por pausas, não pra
+          uma janela de tempo fixa e sobreposta.
+      - text: Global window (janela única, sem particionamento por tempo)
+        correct: false
+        explanation: Uma janela global trataria toda a coleção como um único bloco,
+          sem o particionamento temporal necessário pra calcular uma média móvel.
+    - prompt: Ao planejar como um pipeline lida com "late data" (dado que chega depois
+        do watermark ter avançado além do fim da janela), qual componente do Dataflow
+        controla QUANDO um resultado agregado é emitido?
+      choices:
+      - text: Triggers (gatilhos)
+        correct: true
+        explanation: Triggers determinam quando emitir resultados agregados conforme
+          os dados chegam. Por padrão, o resultado é emitido quando o watermark ultrapassa
+          o fim da janela, mas triggers podem ser configurados por tempo de evento,
+          tempo de processamento ou contagem de elementos.
+      - text: O watermark sozinho, sem nenhuma configuração adicional
+        correct: false
+        explanation: O watermark define quando os dados de uma janela são considerados
+          completos, mas quem decide quando de fato emitir o resultado agregado é
+          o trigger (o comportamento padrão até usa o watermark, mas é o trigger que
+          controla isso).
+      - text: O tipo de sink (destino) configurado no pipeline
+        correct: false
+        explanation: O sink só recebe o resultado já processado — ele não controla
+          o timing de emissão da agregação, isso é responsabilidade dos triggers.
+      - text: O número de workers alocados ao job do Dataflow
+        correct: false
+        explanation: A quantidade de workers afeta capacidade/paralelismo de processamento,
+          não a lógica de QUANDO um resultado de janela é emitido.
   - name: Construção de pipelines (batch e streaming)
     slug: construcao-pipelines
     order: 2
@@ -340,6 +480,77 @@ domains:
         correct: false
         explanation: São serviços com arquiteturas e modelos operacionais bem diferentes,
           não um simples rebranding.
+    - prompt: Na construção de um pipeline com o Apache Beam SDK (base do Dataflow),
+        o que é uma `PCollection`?
+      choices:
+      - text: Um dataset potencialmente distribuído e multi-elemento que representa
+          os dados do pipeline, podendo ser limitado (batch) ou ilimitado (streaming)
+        correct: true
+        explanation: '`PCollection` é a estrutura de dados fundamental do Beam — os
+          transforms usam objetos `PCollection` como entrada e saída em cada etapa.
+          Ela pode ser bounded (tamanho fixo, batch) ou unbounded (atualização contínua,
+          streaming).'
+      - text: Uma tabela física criada no BigQuery pra armazenar resultados intermediários
+        correct: false
+        explanation: '`PCollection` é uma abstração em memória do modelo de programação
+          do Beam, não uma tabela física persistida em nenhum serviço de armazenamento.'
+      - text: Um cluster de máquinas virtuais que executa o pipeline
+        correct: false
+        explanation: Isso descreve a infraestrutura de execução (workers), não a estrutura
+          de dados que representa o conteúdo processado pelo pipeline.
+      - text: O arquivo de configuração YAML que define as etapas do pipeline
+        correct: false
+        explanation: Pipelines do Beam são definidos em código (Java/Python/Go), não
+          em YAML — e `PCollection` é uma estrutura de dados em tempo de execução,
+          não um arquivo de configuração.
+    - prompt: Ao construir um pipeline com Apache Beam, qual é a operação central
+        de processamento paralelo que aplica uma função definida pelo usuário (`DoFn`)
+        em cada elemento de uma `PCollection`?
+      choices:
+      - text: ParDo
+        correct: true
+        explanation: '`ParDo` é a operação de processamento paralelo central dos SDKs
+          do Apache Beam — ela invoca uma função especificada pelo usuário (um `DoFn`)
+          em cada elemento da `PCollection` de entrada.'
+      - text: GroupByKey
+        correct: false
+        explanation: '`GroupByKey` agrupa elementos por chave — é um transform específico
+          de agregação, não a operação central e genérica de aplicar uma função por
+          elemento.'
+      - text: Sink
+        correct: false
+        explanation: 'Sink é o destino final dos dados processados (ex: escrever no
+          BigQuery), não uma operação de transformação por elemento.'
+      - text: Watermark
+        correct: false
+        explanation: Watermark é um conceito de completude temporal de janelas em
+          streaming, não uma operação de processamento por elemento.
+    - prompt: Uma equipe precisa rodar jobs Spark/Hadoop já existentes no GCP, criando
+        e destruindo o cluster sob demanda pra não pagar por capacidade ociosa. Qual
+        característica do Dataproc viabiliza esse padrão de cluster efêmero?
+      choices:
+      - text: Operações de criar, escalar e desligar o cluster levam em média 90 segundos
+          ou menos
+        correct: true
+        explanation: A documentação do Dataproc destaca que clusters são rápidos de
+          iniciar, escalar e desligar, com cada uma dessas operações levando em média
+          90 segundos ou menos — isso viabiliza o padrão de subir o cluster só pra
+          rodar o job e derrubar em seguida, sem pagar por capacidade ociosa.
+      - text: O Dataproc não usa clusters — é inteiramente serverless
+        correct: false
+        explanation: 'O contrário: Dataproc é um serviço gerenciado, mas não serverless
+          — você cria e gerencia os clusters (o Google cuida da infraestrutura por
+          trás), diferente de um modelo totalmente sem cluster.'
+      - text: O Dataproc só suporta clusters permanentes, sem opção de desligar
+        correct: false
+        explanation: Justamente o oposto — a documentação recomenda desligar o cluster
+          quando não estiver em uso, pra evitar gasto com capacidade ociosa (padrão
+          de cluster efêmero).
+      - text: O Dataproc roda exclusivamente frameworks proprietários do Google, não
+          open-source
+        correct: false
+        explanation: O Dataproc roda frameworks open-source consagrados — Apache Spark,
+          Hadoop, Hive e Pig — não frameworks proprietários.
   - name: Deploy e operacionalização de pipelines
     slug: deploy-operacionalizacao
     order: 3
@@ -365,6 +576,105 @@ domains:
         correct: false
         explanation: Cloud Build é CI/CD (build/test/deploy de artefatos de código),
           não orquestração de pipelines de dados em produção.
+    - prompt: No Cloud Composer, o que é um DAG?
+      choices:
+      - text: Uma coleção de tarefas que você quer agendar e rodar, organizadas de
+          forma a refletir suas relações e dependências
+        correct: true
+        explanation: Um DAG (grafo acíclico dirigido) é a unidade central de trabalho
+          no Airflow/Composer — organiza tarefas (preparar dados, monitorar uma API,
+          enviar e-mail, rodar um pipeline) respeitando as dependências entre elas.
+      - text: Uma tabela de metadados que armazena o schema de todas as pipelines
+        correct: false
+        explanation: DAG é uma estrutura de orquestração de tarefas, não uma tabela
+          de metadados de schema.
+      - text: O nome do cluster do Kubernetes que executa o Airflow
+        correct: false
+        explanation: O cluster GKE é a infraestrutura que roda os componentes do Airflow
+          por trás do Composer — DAG é o conceito de workflow definido pelo usuário,
+          uma camada acima disso.
+      - text: Um tipo de job do BigQuery pra rodar consultas agendadas
+        correct: false
+        explanation: Consultas agendadas do BigQuery são um recurso separado (scheduled
+          queries) — DAG é o conceito de orquestração do Composer/Airflow, que pode
+          inclusive orquestrar esses jobs.
+    - prompt: Ao operacionalizar orquestração de workflows com Cloud Composer, em
+        que tipo de infraestrutura os ambientes gerenciados do Airflow rodam?
+      choices:
+      - text: Clusters do Google Kubernetes Engine (GKE), provisionados e gerenciados
+          pelo serviço
+        correct: true
+        explanation: Ambientes gerenciados do Airflow são deployments baseados em
+          GKE — o Composer usa o GKE pra criar, gerenciar e deletar os clusters de
+          ambiente onde os componentes do Airflow rodam. O usuário não traz seu próprio
+          cluster, banco ou registry.
+      - text: Máquinas virtuais únicas (single VM), sem orquestração de containers
+        correct: false
+        explanation: O modelo é baseado em GKE (Kubernetes), não uma VM única — isso
+          é o que permite escalar os componentes do Airflow de forma gerenciada.
+      - text: Cloud Functions, de forma totalmente serverless
+        correct: false
+        explanation: Composer não é baseado em Cloud Functions — a arquitetura documentada
+          é especificamente GKE, com um cluster rodando os componentes do Airflow.
+      - text: Infraestrutura on-premises conectada via VPN
+        correct: false
+        explanation: Cloud Composer é um serviço totalmente gerenciado no Google Cloud,
+          rodando em GKE — não depende de infraestrutura on-premises do cliente.
+    - prompt: Qual é a principal vantagem de operacionalizar um pipeline do Dataflow
+        como um TEMPLATE, em vez de exigir que quem for rodar o pipeline tenha o ambiente
+        de desenvolvimento e as dependências instaladas?
+      choices:
+      - text: Templates separam o design do pipeline do deploy — dá pra implantar
+          via console, CLI ou API, sem ambiente de desenvolvimento nem dependências
+          locais
+        correct: true
+        explanation: 'Um desenvolvedor cria o template, e outra pessoa (ex: um cientista
+          de dados) pode implantá-lo depois, via Console, gcloud CLI ou chamadas REST
+          — sem precisar de ambiente de desenvolvimento nem das dependências do pipeline
+          instaladas localmente.'
+      - text: Templates eliminam completamente a necessidade de workers pra executar
+          o job
+        correct: false
+        explanation: Templates mudam COMO o pipeline é empacotado e implantado, não
+          eliminam a necessidade de workers rodando o processamento em si.
+      - text: Templates só funcionam para pipelines batch, nunca streaming
+        correct: false
+        explanation: Não há essa restrição documentada — templates (clássicos ou Flex)
+          empacotam pipelines Dataflow em geral, não são exclusivos de um modo de
+          processamento.
+      - text: Templates substituem a necessidade de definir um DAG no Composer
+        correct: false
+        explanation: 'São conceitos de camadas diferentes: template é sobre empacotar
+          e implantar UM pipeline do Dataflow; DAG é sobre orquestrar MÚLTIPLAS tarefas/dependências
+          (que pode incluir disparar um desses templates).'
+    - prompt: Qual é uma diferença real entre Flex Templates e Classic Templates no
+        Dataflow?
+      choices:
+      - text: Flex Templates não exigem a interface ValueProvider pra parâmetros de
+          entrada e conseguem construir o job graph dinamicamente; Classic Templates
+          serializam o job graph como JSON estático e exigem ValueProvider
+        correct: true
+        explanation: 'Documentação oficial: diferente dos Classic Templates, Flex
+          Templates não exigem ValueProvider pros parâmetros de entrada e podem construir
+          o job graph de forma dinâmica (não estática). Flex Templates também são
+          empacotados como imagem Docker no Artifact Registry, com um arquivo de especificação
+          no Cloud Storage.'
+      - text: Classic Templates são mais novos e recomendados; Flex Templates estão
+          sendo descontinuados
+        correct: false
+        explanation: 'É o oposto: Flex Templates são o formato recomendado pra trabalho
+          novo, segundo a documentação atual.'
+      - text: Flex Templates só podem ser criados via Console, nunca via CLI
+        correct: false
+        explanation: Não há essa restrição — a diferença documentada entre os dois
+          tipos é sobre empacotamento (Docker image vs JSON estático) e uso de ValueProvider,
+          não sobre qual ferramenta de deploy usar.
+      - text: Classic Templates suportam pré-processamento em VMs durante a construção
+          do pipeline; Flex Templates não
+        correct: false
+        explanation: É o contrário — essa capacidade de pré-processamento em VMs durante
+          a construção do pipeline é atribuída aos Flex Templates, não aos Classic
+          Templates.
 - name: Preparing and using data for analysis
   slug: preparing-analysis
   weight_pct: 15
@@ -396,6 +706,107 @@ domains:
         correct: false
         explanation: Isso tira os dados da fonte de verdade e não escala nem resolve
           o problema de performance de forma sustentável.
+    - prompt: O que é o BigQuery BI Engine?
+      choices:
+      - text: Um serviço de análise em memória, rápido, que acelera consultas SQL
+          cacheando de forma inteligente os dados mais usados
+        correct: true
+        explanation: BI Engine é descrito como um serviço de análise em memória (in-memory)
+          que acelera consultas SQL no BigQuery cacheando de forma inteligente os
+          dados usados com mais frequência.
+      - text: Um serviço de ETL gerenciado pra carregar dados de fontes externas no
+          BigQuery
+        correct: false
+        explanation: Isso descreve um serviço de ingestão/ETL — BI Engine é sobre
+          acelerar consultas já dentro do BigQuery, não sobre carregar dados de fontes
+          externas.
+      - text: Um sistema de controle de acesso (IAM) específico pra dashboards de
+          BI
+        correct: false
+        explanation: BI Engine não é um mecanismo de controle de acesso — é um serviço
+          de aceleração de performance de consultas.
+      - text: Uma ferramenta de visualização de dados que substitui o Looker Studio
+        correct: false
+        explanation: BI Engine não é uma ferramenta de visualização — ele acelera
+          consultas que ferramentas de visualização (Looker Studio, Looker, Tableau,
+          Power BI) fazem contra o BigQuery.
+    - prompt: Uma equipe já usa Tableau conectado ao BigQuery via driver ODBC pra
+        seus dashboards. Ela precisa mudar a ferramenta de BI ou reconfigurar a conexão
+        pra se beneficiar da aceleração do BI Engine?
+      choices:
+      - text: Não — qualquer solução de BI que use a API do BigQuery via REST, JDBC
+          ou ODBC pode usar o BI Engine sem modificação
+        correct: true
+        explanation: A documentação afirma que qualquer solução de BI ou aplicação
+          customizada que trabalhe com a API do BigQuery via mecanismos padrão (REST,
+          JDBC, ODBC) pode usar o BI Engine sem modificação — Looker, Data Studio/Looker
+          Studio, Tableau e Power BI são citados explicitamente.
+      - text: Sim — só o Looker Studio tem suporte oficial ao BI Engine
+        correct: false
+        explanation: O suporte não é exclusivo do Looker Studio — a documentação cita
+          explicitamente Tableau e Power BI como ferramentas compatíveis, além de
+          qualquer solução que use REST/JDBC/ODBC.
+      - text: Sim — é preciso migrar os dashboards pro Looker (não Looker Studio)
+        correct: false
+        explanation: Não há essa exigência de migração — a compatibilidade é ampla,
+          baseada no mecanismo de conexão (REST/JDBC/ODBC), não na ferramenta de BI
+          específica.
+      - text: Não é possível usar BI Engine com Tableau em nenhuma configuração
+        correct: false
+        explanation: 'O oposto: Tableau é citado explicitamente como uma das ferramentas
+          compatíveis com BI Engine.'
+    - prompt: Uma consulta de BI faz join entre uma tabela fato grande e uma tabela
+        de dimensão com 8 milhões de linhas. Pelos limites documentados do BI Engine
+        pra aceleração de joins, o que acontece?
+      choices:
+      - text: A tabela de dimensão excede o limite de 5 milhões de linhas pra aceleração
+          de join, então essa consulta não é acelerada dessa forma
+        correct: true
+        explanation: Pra joins, o BI Engine exige que tabelas de dimensão tenham menos
+          de 5 milhões de linhas (e até 5 GiB, ou 1 GiB se for uma referência particionada)
+          — 8 milhões de linhas excede esse limite.
+      - text: Não há limite de tamanho de tabela de dimensão pra joins no BI Engine
+        correct: false
+        explanation: 'Existe sim um limite documentado: menos de 5 milhões de linhas
+          (e restrição de tamanho em GiB) pra tabelas de dimensão em joins acelerados
+          pelo BI Engine.'
+      - text: O BI Engine converte automaticamente a tabela de dimensão em uma view
+          materializada pra contornar o limite
+        correct: false
+        explanation: Não há essa conversão automática documentada — via de regra,
+          uma tabela de dimensão acima do limite simplesmente não se qualifica pra
+          aceleração de join do BI Engine.
+      - text: O limite de linhas só se aplica a tabelas fato, nunca a tabelas de dimensão
+        correct: false
+        explanation: É o contrário — o limite de linhas documentado (5 milhões) é
+          especificamente sobre a tabela de DIMENSÃO no join, não a tabela fato.
+    - prompt: Qual abordagem a documentação do BigQuery recomenda pra combinar BI
+        Engine com views materializadas num cenário de BI com joins recorrentes entre
+        várias tabelas?
+      choices:
+      - text: Usar uma view materializada pra pré-computar os joins numa tabela única
+          e achatada, e deixar o BI Engine acelerar as consultas em cima dela
+        correct: true
+        explanation: 'A documentação recomenda combinar os dois: views materializadas
+          fazem os joins pra produzir uma única tabela grande e achatada, e o BI Engine
+          acelera consultas sobre ela — evitando repetir os joins a cada consulta,
+          com performance ótima.'
+      - text: Nunca usar os dois juntos — BI Engine e views materializadas são mutuamente
+          exclusivos
+        correct: false
+        explanation: 'A documentação recomenda justamente o oposto: combinar os dois
+          é uma prática indicada pra performance ótima em cenários com joins recorrentes.'
+      - text: Usar o BI Engine pra fazer os joins, e a view materializada só pra cache
+        correct: false
+        explanation: É o papel inverso — quem faz o join é a view materializada (pré-computando
+          uma tabela achatada); o BI Engine entra depois, cacheando/acelerando consultas
+          sobre o resultado.
+      - text: Substituir totalmente as views materializadas por tabelas particionadas
+          antes de habilitar o BI Engine
+        correct: false
+        explanation: Não há essa recomendação — particionamento é uma técnica separada;
+          a combinação documentada especificamente pra esse cenário é BI Engine +
+          views materializadas.
   - name: Preparação para IA e ML
     slug: preparacao-ia-ml
     order: 2
@@ -420,6 +831,104 @@ domains:
         correct: false
         explanation: Data Catalog é sobre descoberta/governança de metadados, sem
           relação com treino de modelos.
+    - prompt: Uma equipe quer segmentar clientes em grupos com comportamento de compra
+        parecido, sem ter rótulos prévios (aprendizado não supervisionado). Qual tipo
+        de modelo do BigQuery ML é adequado?
+      choices:
+      - text: K-means clustering
+        correct: true
+        explanation: O BigQuery ML documenta k-means clustering especificamente pra
+          segmentação de dados — é o tipo de modelo indicado pra agrupar registros
+          parecidos sem rótulos prévios.
+      - text: Regressão linear
+        correct: false
+        explanation: Regressão linear é pra prever uma métrica numérica contínua (aprendizado
+          supervisionado com rótulo), não pra segmentar grupos sem rótulo.
+      - text: Regressão logística
+        correct: false
+        explanation: Regressão logística classifica entre dois ou mais valores possíveis
+          conhecidos previamente — também é supervisionado, não serve pra segmentação
+          sem rótulo.
+      - text: Análise de componentes principais (PCA)
+        correct: false
+        explanation: PCA é usado pra redução de dimensionalidade (reduzir o número
+          de variáveis mantendo a informação relevante), não especificamente pra segmentar
+          clientes em grupos.
+    - prompt: Qual é a principal vantagem de treinar um modelo com BigQuery ML usando
+        `CREATE MODEL`, do ponto de vista de quem já trabalha com dados no BigQuery?
+      choices:
+      - text: Treinar e acessar recursos de ML usando SQL, uma linguagem já familiar
+          pra analistas de dados
+        correct: true
+        explanation: 'A documentação enfatiza justamente isso: você treina modelos
+          e acessa recursos de IA usando SQL — uma linguagem que analistas de dados
+          já dominam, sem precisar aprender uma linguagem de ML separada (como Python)
+          pra treinar um modelo básico.'
+      - text: É a única forma de treinar modelos de machine learning no Google Cloud
+        correct: false
+        explanation: Não é a única forma — o GCP tem outras plataformas de ML fora
+          do BigQuery; a vantagem do BigQuery ML é especificamente permitir treinar
+          via SQL sem sair do BigQuery, não ser a única opção do GCP.
+      - text: Elimina totalmente a necessidade de qualquer preparação prévia dos dados
+        correct: false
+        explanation: Não há essa eliminação documentada — preparar os dados (limpeza,
+          seleção de features) continua sendo parte do processo, só a etapa de treino
+          em si é feita via SQL.
+      - text: Garante automaticamente a melhor acurácia possível pra qualquer caso
+          de uso
+        correct: false
+        explanation: O BigQuery ML facilita o TREINO via SQL, mas não garante "melhor
+          acurácia automática" — a escolha do tipo de modelo e a qualidade dos dados
+          ainda afetam o resultado.
+    - prompt: Uma equipe já tem um modelo treinado externamente em TensorFlow e quer
+        usá-lo pra fazer predições direto no BigQuery, sem re-treinar do zero em SQL.
+        Isso é possível?
+      choices:
+      - text: Sim — o BigQuery ML suporta importar modelos já treinados nos formatos
+          ONNX, TensorFlow, TensorFlow Lite ou XGBoost
+        correct: true
+        explanation: Além dos modelos treinados internamente via SQL, o BigQuery ML
+          suporta modelos IMPORTADOS — customizados, treinados fora do BigQuery, nos
+          formatos ONNX, TensorFlow, TensorFlow Lite ou XGBoost, carregados do Cloud
+          Storage.
+      - text: Não — o BigQuery ML só aceita modelos treinados internamente via CREATE
+          MODEL
+        correct: false
+        explanation: O BigQuery ML tem uma categoria específica de "modelos importados"
+          justamente pra esse cenário — modelos treinados externamente não precisam
+          ser retreinados em SQL pra rodar no BigQuery.
+      - text: Sim, mas só se o modelo for reescrito manualmente em SQL antes de importar
+        correct: false
+        explanation: Não há essa exigência de reescrita — a importação suporta os
+          formatos de arquivo do modelo diretamente (ONNX, TensorFlow, TFLite, XGBoost),
+          sem precisar converter a lógica pra SQL.
+      - text: Não — modelos externos só podem ser usados fora do BigQuery, nunca importados
+          pra ele
+        correct: false
+        explanation: É o oposto — importar modelos externos pro BigQuery (a partir
+          do Cloud Storage, nos formatos suportados) é um recurso documentado do BigQuery
+          ML.
+    - prompt: 'Uma equipe precisa prever um valor numérico contínuo (ex: receita esperada
+        do próximo mês) usando dados históricos rotulados. Qual tipo de modelo do
+        BigQuery ML é o indicado pra esse cenário?'
+      choices:
+      - text: Regressão linear
+        correct: true
+        explanation: A documentação descreve regressão linear especificamente pra
+          prever métricas numéricas — o caso de uma previsão de valor contínuo como
+          receita esperada.
+      - text: Regressão logística
+        correct: false
+        explanation: Regressão logística é pra classificar entre dois ou mais valores
+          possíveis (categorias), não pra prever um valor numérico contínuo.
+      - text: K-means clustering
+        correct: false
+        explanation: K-means é pra segmentação/agrupamento sem rótulo, não pra prever
+          um valor numérico com base em dados históricos rotulados.
+      - text: Fatoração de matriz (matrix factorization)
+        correct: false
+        explanation: Fatoração de matriz é indicada pra sistemas de recomendação de
+          produtos, um caso de uso diferente de prever um valor numérico contínuo.
   - name: Compartilhamento de dados
     slug: compartilhamento-dados
     order: 3
@@ -444,3 +953,99 @@ domains:
         correct: false
         explanation: VPC Service Controls cria perímetros de segurança de rede — restringe
           acesso, não é uma ferramenta de compartilhamento de dados entre organizações.
+    - prompt: Uma empresa assina uma listagem (listing) do Analytics Hub de outro
+        time. O que acontece com os dados compartilhados no projeto de quem assinou?
+      choices:
+      - text: É criado um dataset vinculado (linked dataset) no projeto do assinante,
+          SEM replicar os dados — as consultas leem os dados reais em tempo real
+        correct: true
+        explanation: Assinar uma listagem cria um linked dataset no projeto do assinante
+          sem replicar dados; graças à separação entre computação e armazenamento
+          do BigQuery, os assinantes consultam tabelas e views padrão em tempo real,
+          mas não podem adicionar/atualizar objetos nesse dataset.
+      - text: Os dados são copiados integralmente pro projeto do assinante
+        correct: false
+        explanation: 'O contrário — o ponto central do Analytics Hub é NÃO replicar
+          dados: o linked dataset é só um ponteiro somente-leitura pros dados do publicador.'
+      - text: O assinante ganha permissões de IAM diretas na tabela de origem do publicador
+        correct: false
+        explanation: 'O modelo é assimétrico: o assinante consome via linked dataset,
+          sem precisar (nem ganhar) permissões de IAM diretas no dataset de origem
+          do publicador.'
+      - text: Os dados só ficam disponíveis depois de um job de ETL agendado
+        correct: false
+        explanation: Não há ETL/agendamento envolvido — a consulta acontece em tempo
+          real sobre os dados de origem, sem etapa intermediária de cópia.
+    - prompt: No modelo do Analytics Hub, qual é a diferença entre uma "listagem"
+        (listing) e um "data exchange"?
+      choices:
+      - text: Data exchange é o container que organiza recursos compartilhados; listing
+          é a referência a um recurso específico dentro desse exchange (com descrição,
+          queries de exemplo, documentação)
+        correct: true
+        explanation: Um data exchange é o container onde publicadores compartilham
+          listagens e assinantes navegam e pedem acesso; dentro dele, uma listing
+          é a referência a UM recurso compartilhado específico, com descrição, queries/mensagens
+          de exemplo e instruções pro assinante.
+      - text: São sinônimos — os dois termos descrevem exatamente a mesma coisa
+        correct: false
+        explanation: 'Não são sinônimos: exchange é o container (pode ter várias listagens
+          dentro), listing é o item individual referenciando um recurso compartilhado
+          específico.'
+      - text: Listing é privado por padrão; data exchange é sempre público
+        correct: false
+        explanation: É o exchange que tem a opção de ser privado (só usuários autorizados)
+          ou público (todos os usuários autenticados do Google Cloud) — não a listing
+          isoladamente.
+      - text: Data exchange é exclusivo do BigQuery; listing é um recurso do Pub/Sub
+        correct: false
+        explanation: Ambos os conceitos (exchange e listing) são do Analytics Hub
+          — não há essa separação entre BigQuery e Pub/Sub aqui.
+    - prompt: Uma equipe quer compartilhar só um subconjunto de colunas/linhas de
+        uma tabela sensível do BigQuery com outro time, sem dar acesso direto ao dataset
+        de origem. Qual recurso resolve isso diretamente?
+      choices:
+      - text: Authorized view (view autorizada)
+        correct: true
+        explanation: Uma authorized view permite compartilhar um subconjunto de dados
+          de um dataset com usuários/grupos específicos — eles conseguem ver e consultar
+          os dados compartilhados, mas não acessam diretamente o dataset de origem.
+      - text: Dar permissão de IAM de leitura direto no dataset de origem inteiro
+        correct: false
+        explanation: Isso concede acesso ao dataset INTEIRO, não a um subconjunto
+          — exatamente o que a authorized view evita, permitindo restringir a visão
+          sem expor a origem completa.
+      - text: Exportar a tabela inteira pra um bucket do Cloud Storage e compartilhar
+          o bucket
+        correct: false
+        explanation: Isso duplicaria os dados fora do BigQuery e não teria a granularidade
+          de compartilhar só um subconjunto de colunas/linhas controlado por uma view.
+      - text: Criar uma cópia física da tabela só com as colunas desejadas
+        correct: false
+        explanation: Funcionaria, mas cria duplicação de dados que fica desatualizada
+          — o mecanismo direto e documentado pra esse cenário é a authorized view,
+          que não duplica dados.
+    - prompt: Uma equipe quer criar uma authorized view em outro dataset pra compartilhar
+        dados de uma tabela sensível. Que restrição de localização a documentação
+        do BigQuery impõe nesse caso?
+      choices:
+      - text: O dataset de origem e o dataset da authorized view precisam estar na
+          MESMA localização regional
+        correct: true
+        explanation: 'A documentação é explícita: ao criar uma authorized view (ou
+          authorized materialized view) em outro dataset, o dataset de origem e o
+          dataset da view autorizada precisam estar na mesma localização regional.'
+      - text: Não existe restrição de localização — a view pode estar em qualquer
+          região
+        correct: false
+        explanation: 'Existe sim uma restrição documentada: mesma localização regional
+          entre o dataset de origem e o dataset da authorized view.'
+      - text: O dataset de origem precisa estar sempre na região us-central1
+        correct: false
+        explanation: Não é uma região fixa exigida — a regra é que as DUAS localizações
+          (origem e view) precisam bater entre si, não que uma região específica seja
+          obrigatória.
+      - text: A restrição só se aplica a materialized views, não a views lógicas
+        correct: false
+        explanation: A documentação aplica a mesma restrição de região tanto pra authorized
+          views quanto pra authorized materialized views.
