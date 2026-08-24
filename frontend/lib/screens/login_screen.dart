@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -56,11 +57,12 @@ class LoginScreen extends StatefulWidget {
 }
 
 /// Porta do servidor loopback que recebe o redirect do OAuth no desktop
-/// Linux (ver `_signInWithGoogle`). Precisa bater com a URL cadastrada em
-/// Supabase → Authentication → URL Configuration → Redirect URLs
-/// (`http://localhost:8910/**`). Em mobile (Android/iOS), o caminho normal
-/// é deep link nativo — esse loopback é só a solução prática pro alvo de
-/// desenvolvimento atual (desktop).
+/// Linux (ver `_signInWithGoogleDesktop`). Precisa bater com a URL
+/// cadastrada em Supabase → Authentication → URL Configuration → Redirect
+/// URLs (`http://localhost:8910/**`). No Web, o fluxo é outro (ver
+/// `_signInWithGoogleWeb` — sem loopback, é o próprio SDK que resolve via
+/// redirect de página). Em mobile (Android/iOS), nenhum dos dois se aplica
+/// — precisa de deep link nativo, ainda não implementado (ver CONCERNS.md).
 const _oauthLoopbackPort = 8910;
 
 class _LoginScreenState extends State<LoginScreen> {
@@ -136,11 +138,41 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  /// No Web, HttpServer/InternetAddress (dart:io) não existem — o loopback
+  /// do desktop não serve pra nada aqui. O SDK do Supabase já resolve OAuth
+  /// no Web sozinho: `signInWithOAuth` redireciona a própria aba pro Google,
+  /// e ao voltar o SDK detecta a sessão na URL de retorno automaticamente
+  /// (`detectSessionInUri`, ligado por padrão) — o `onAuthStateChange`
+  /// escutado em main.dart._AuthGate troca pra Home sozinho, sem precisarmos
+  /// esperar nada aqui.
+  Future<void> _signInWithGoogleWeb() async {
+    setState(() {
+      _submitting = true;
+      _error = null;
+      _info = null;
+    });
+    try {
+      await Supabase.instance.client.auth.signInWithOAuth(OAuthProvider.google);
+      // Não há "depois" pra tratar aqui: a chamada acima navega a aba pra
+      // fora do app. Se ela retornar sem navegar (provider recusou, popup
+      // bloqueado etc.), ainda tratamos como erro abaixo.
+    } on AuthException catch (e) {
+      setState(() => _error = _friendlyError(e));
+    } catch (e) {
+      setState(() => _error = 'Não consegui iniciar o login com Google. Tente de novo.');
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
   /// Fluxo OAuth pro desktop Linux: abre o navegador do sistema pro login
   /// do Google, e um servidor HTTP local (loopback) recebe o redirect de
   /// volta — sem isso, o app não tem como saber que o login terminou (não
-  /// há deep link nativo registrado no SO nesse ambiente de dev).
-  Future<void> _signInWithGoogle() async {
+  /// há deep link nativo registrado no SO nesse ambiente de dev). Só roda
+  /// fora do Web — ver `_signInWithGoogleWeb` pro caminho do navegador, e
+  /// nota em `_oauthLoopbackPort`/CONCERNS sobre mobile (Android/iOS) ainda
+  /// não ter um fluxo equivalente (precisa de deep link nativo).
+  Future<void> _signInWithGoogleDesktop() async {
     setState(() {
       _submitting = true;
       _error = null;
@@ -326,7 +358,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 8),
                       OutlinedButton.icon(
-                        onPressed: _submitting ? null : _signInWithGoogle,
+                        onPressed: _submitting
+                            ? null
+                            : (kIsWeb ? _signInWithGoogleWeb : _signInWithGoogleDesktop),
                         icon: Image.asset('assets/images/google_logo.png', width: 18, height: 18),
                         label: const Text('Continuar com Google'),
                         style: OutlinedButton.styleFrom(
