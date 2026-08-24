@@ -1,0 +1,84 @@
+certification: gcp-pde
+domain_slug: maintaining-automating-workloads
+topic_slug: organizacao-workloads
+questions:
+  - prompt: Uma organização usa a edição Standard do BigQuery e quer criar uma
+      reserva de slots de 2.000 slots para um projeto de análise crítico. Segundo
+      a documentação de editions, isso é possível na edição Standard?
+    source_url: https://cloud.google.com/bigquery/docs/editions-intro
+    verified: true
+    choices:
+      - text: Não — a edição Standard tem um limite máximo de 1.600 slots por reserva
+        correct: true
+        explanation: A documentação de editions lista 1.600 slots como o "máximo
+          de reserva" (Max Reservation) para a edição Standard, abaixo dos 2.000
+          slots pretendidos no cenário.
+      - text: Sim — a edição Standard não impõe limite máximo de slots por reserva
+        correct: false
+        explanation: A documentação especifica explicitamente um limite máximo de
+          1.600 slots por reserva para a edição Standard, então existe sim um teto.
+      - text: Sim, mas apenas se a reserva for do tipo BACKGROUND
+        correct: false
+        explanation: A documentação indica que o tipo de assignment BACKGROUND é
+          um recurso disponível a partir da edição Enterprise/Enterprise Plus, não
+          uma forma de contornar o limite de slots da edição Standard.
+      - text: Não — a edição Standard não permite nenhuma reserva de slots, apenas
+          pricing on-demand
+        correct: false
+        explanation: A documentação mostra que a edição Standard suporta reservas
+          de slots com um teto de 1.600 slots — ela não é limitada apenas ao modelo
+          on-demand.
+  - prompt: Um time de dados quer configurar um assignment do tipo CONTINUOUS
+      para suportar consultas contínuas (continuous queries) no BigQuery. A organização
+      está na edição Standard. Isso é suportado?
+    source_url: https://cloud.google.com/bigquery/docs/editions-intro
+    verified: true
+    choices:
+      - text: Não — assignments do tipo CONTINUOUS só estão disponíveis a partir
+          da edição Enterprise/Enterprise Plus
+        correct: true
+        explanation: A documentação mostra que a edição Standard suporta apenas
+          assignments do tipo QUERY e PIPELINE, enquanto CONTINUOUS (usado para
+          continuous queries) é um tipo de assignment expandido disponível em Enterprise/Enterprise
+          Plus.
+      - text: Sim — todos os tipos de assignment, incluindo CONTINUOUS, estão disponíveis
+          em qualquer edição
+        correct: false
+        explanation: A documentação restringe a edição Standard aos tipos de assignment
+          QUERY e PIPELINE; CONTINUOUS é exclusivo de Enterprise/Enterprise Plus.
+      - text: Sim, mas só no modelo de pricing on-demand, nunca em edições
+        correct: false
+        explanation: A documentação associa o assignment CONTINUOUS às edições Enterprise/Enterprise
+          Plus, não descreve essa restrição em termos de on-demand vs. edições.
+      - text: Não — nenhuma edição do BigQuery suporta assignments do tipo CONTINUOUS
+        correct: false
+        explanation: A documentação lista CONTINUOUS como um tipo de assignment
+          suportado nas edições Enterprise e Enterprise Plus, então a afirmação
+          de que nenhuma edição suporta está incorreta.
+  - prompt: Uma equipe de ciência de dados quer usar BigQuery ML para treinar
+      modelos diretamente com SQL, mas a organização está atualmente na edição
+      Standard do BigQuery. Segundo a documentação, isso vai funcionar?
+    source_url: https://cloud.google.com/bigquery/docs/editions-intro
+    verified: true
+    choices:
+      - text: Não — BigQuery ML está bloqueado na edição Standard; é preciso Enterprise,
+          Enterprise Plus ou on-demand
+        correct: true
+        explanation: A documentação lista o BigQuery ML como bloqueado (Blocked)
+          na edição Standard, estando disponível apenas em Enterprise, Enterprise
+          Plus e no modelo on-demand.
+      - text: Sim — BigQuery ML está disponível em todas as edições, incluindo Standard
+        correct: false
+        explanation: A documentação especifica que o BigQuery ML está bloqueado
+          especificamente na edição Standard, contrariando essa afirmação.
+      - text: Não — BigQuery ML não está disponível em nenhuma edição, só via Vertex
+          AI
+        correct: false
+        explanation: A documentação mostra que BigQuery ML está disponível em Enterprise,
+          Enterprise Plus e on-demand — não é uma funcionalidade indisponível em
+          todas as edições.
+      - text: Sim, mas só se a equipe migrar para o modelo on-demand permanentemente
+        correct: false
+        explanation: Migrar para on-demand é uma das formas de ter acesso ao BigQuery
+          ML segundo a documentação, mas não é a única — Enterprise e Enterprise
+          Plus também suportam, então "só" migrando para on-demand está incorreto.

@@ -1,0 +1,96 @@
+certification: gcp-pde
+domain_slug: designing-data-processing
+topic_slug: seguranca-compliance-design
+questions:
+  - prompt: Uma engenheira de dados está configurando uma service account que só
+      precisa publicar mensagens em um tópico específico do Pub/Sub dentro de um
+      pipeline de produção. A equipe de segurança pediu para evitar papéis básicos
+      como Editor ou Owner. Qual abordagem segue o princípio de menor privilégio
+      recomendado pela documentação do IAM?
+    source_url: https://cloud.google.com/iam/docs/overview
+    verified: true
+    choices:
+      - text: Conceder um papel predefinido específico do serviço, como roles/pubsub.publisher
+        correct: true
+        explanation: A documentação do IAM define papéis predefinidos como papéis
+          gerenciados pelos próprios serviços do Google Cloud, contendo permissões
+          para tarefas comuns — citando explicitamente roles/pubsub.publisher como
+          exemplo de papel predefinido para publicar em tópicos do Pub/Sub.
+      - text: Conceder o papel básico Editor na service account
+        correct: false
+        explanation: A documentação descreve os papéis básicos (como Editor e Owner)
+          como "altamente permissivos, fornecendo acesso amplo aos serviços do Google
+          Cloud" e explicitamente os marca como não adequados para uso em produção.
+      - text: Conceder o papel básico Owner na service account
+        correct: false
+        explanation: Owner é ainda mais permissivo que Editor entre os papéis básicos,
+          e a documentação do IAM indica que papéis básicos não são adequados para
+          uso em produção.
+      - text: Conceder a permissão pubsub.topics.publish diretamente à service account,
+          sem associá-la a um papel
+        correct: false
+        explanation: Segundo a documentação do IAM, permissões não podem ser concedidas
+          diretamente a um principal — elas só podem ser atribuídas por meio de um
+          papel (role), via um binding na política.
+  - prompt: Uma organização precisa criptografar dados sensíveis no BigQuery com
+      chaves cuja rotação automática, ativação/desativação e destruição de versões
+      permaneçam sob controle da própria organização — sem depender de coordenação
+      manual com um provedor de chaves externo. Qual opção do Cloud KMS atende a
+      esse requisito?
+    source_url: https://cloud.google.com/kms/docs/key-management-service
+    verified: true
+    choices:
+      - text: Chaves gerenciadas pelo cliente (CMEK)
+        correct: true
+        explanation: A documentação do Cloud KMS afirma que, com CMEKs, o cliente
+          controla o cronograma de rotação automática da chave, os papéis e permissões
+          do IAM, e pode habilitar, desabilitar ou destruir versões da chave.
+      - text: Chaves externas via Cloud EKM
+        correct: false
+        explanation: A documentação indica que chaves externas (Cloud EKM) residem
+          em sistemas de terceiros e exigem rotação manual "em coordenação com o
+          Cloud EKM e o provedor de EKM" — o oposto do controle automático pedido
+          no cenário.
+      - text: Chaves fornecidas pelo cliente (CSEK)
+        correct: false
+        explanation: A documentação restringe CSEKs ao uso com Cloud Storage e Compute
+          Engine (este último já descontinuado para CSEK), com material de chave
+          fornecido sob demanda pelo usuário — não é a opção usada para criptografar
+          dados no BigQuery.
+      - text: Chaves de software padrão gerenciadas inteiramente pelo Google, sem
+          configuração pelo cliente
+        correct: false
+        explanation: O cenário exige que a organização controle o cronograma de
+          rotação e o ciclo de vida das versões da chave, o que é a definição de
+          CMEK na documentação — uma chave totalmente gerenciada pelo Google sem
+          input do cliente não atende a esse controle.
+  - prompt: Uma equipe de compliance precisa identificar automaticamente números
+      de cartão de crédito armazenados em uma tabela do BigQuery, usando detectores
+      prontos do Google Cloud em vez de escrever expressões regulares manualmente.
+      Qual recurso do Sensitive Data Protection atende a essa necessidade?
+    source_url: https://cloud.google.com/sensitive-data-protection/docs
+    verified: true
+    choices:
+      - text: Os detectores de infoType integrados
+        correct: true
+        explanation: A documentação do Sensitive Data Protection afirma que a plataforma
+          inclui "mais de 200 detectores de infoType integrados", permitindo classificar
+          tipos de dados sensíveis sem a necessidade de criar detectores customizados.
+      - text: Um detector customizado criado a partir de uma expressão regular escrita
+          pela equipe
+        correct: false
+        explanation: A documentação trata detectores customizados via regex como
+          uma opção adicional para quando os detectores integrados não cobrem um
+          padrão específico — o cenário pede justamente evitar escrever regex manualmente,
+          o que aponta para os detectores integrados, não para os customizados.
+      - text: A técnica de date-shifting
+        correct: false
+        explanation: Date-shifting é listado na documentação como uma técnica de
+          de-identificação (transformação de dados), não como um mecanismo de detecção
+          de tipos de dados sensíveis como números de cartão de crédito.
+      - text: A Análise de Risco baseada em k-anonimato
+        correct: false
+        explanation: A documentação descreve a Análise de Risco (com métricas como
+          k-anonimato e l-diversidade) como uma avaliação de dados estruturados,
+          não como o mecanismo de detecção de tipos de infoType como cartões de
+          crédito.

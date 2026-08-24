@@ -1,0 +1,92 @@
+certification: gcp-pde
+domain_slug: designing-data-processing
+topic_slug: migracao-dados
+questions:
+  - prompt: Uma equipe quer usar o BigQuery Data Transfer Service para carregar
+      dados agendados de um banco Amazon Redshift para dentro do BigQuery, e também
+      pediram para usar o mesmo serviço para exportar os resultados de uma tabela
+      do BigQuery de volta para um bucket do Cloud Storage. Isso é possível com
+      o BigQuery Data Transfer Service?
+    source_url: https://cloud.google.com/bigquery/docs/dts-introduction
+    verified: true
+    choices:
+      - text: Só a primeira parte é possível — o BigQuery Data Transfer Service não
+          pode ser usado para tirar dados de dentro do BigQuery
+        correct: true
+        explanation: A documentação lista o Amazon Redshift entre as fontes de dados
+          suportadas para carregar dados no BigQuery, mas também afirma explicitamente
+          que "você não pode usar o BigQuery Data Transfer Service para transferir
+          dados para fora do BigQuery."
+      - text: As duas operações são possíveis com o BigQuery Data Transfer Service
+        correct: false
+        explanation: A documentação afirma explicitamente que o serviço não pode
+          ser usado para transferir dados para fora do BigQuery, então a segunda
+          operação (exportar do BigQuery pro Cloud Storage) não é suportada por
+          ele.
+      - text: Nenhuma das duas operações é possível — o serviço só transfere entre
+          contas do Google Ads
+        correct: false
+        explanation: A documentação lista dezenas de fontes suportadas além do Google
+          Ads, incluindo bancos de dados como Amazon Redshift, então a primeira
+          afirmação do cenário é factualmente possível.
+      - text: Só a exportação para o Cloud Storage é possível, não a importação
+          do Redshift
+        correct: false
+        explanation: É o inverso do que a documentação afirma — importar de fontes
+          como Redshift é suportado, enquanto exportar dados para fora do BigQuery
+          não é.
+  - prompt: Depois de configurar uma transferência agendada no BigQuery Data
+      Transfer Service, a equipe percebe que uma falha na fonte de dados fez
+      com que 3 dias de dados não fossem carregados. Segundo a documentação,
+      o serviço oferece algum mecanismo para recuperar esses dados sem reconfigurar
+      a transferência do zero?
+    source_url: https://cloud.google.com/bigquery/docs/dts-introduction
+    verified: true
+    choices:
+      - text: Sim — é possível iniciar backfills de dados para recuperar de interrupções
+          ou lacunas
+        correct: true
+        explanation: A documentação afirma que o serviço "suporta iniciar backfills
+          de dados para recuperar de quaisquer interrupções ou lacunas", exatamente
+          o cenário de dias perdidos por falha na fonte.
+      - text: Não — a única forma de recuperar os dados perdidos é excluir e recriar
+          a configuração de transferência
+        correct: false
+        explanation: A documentação descreve explicitamente a capacidade de iniciar
+          backfills para recuperar lacunas, sem necessidade de recriar a transferência.
+      - text: Não — o serviço não tem nenhum mecanismo de recuperação de falhas
+        correct: false
+        explanation: A documentação contradiz essa afirmação ao descrever explicitamente
+          o suporte a backfills para recuperação de interrupções e lacunas.
+      - text: Sim, mas somente para transferências vindas do Google Ads
+        correct: false
+        explanation: A documentação não restringe a capacidade de backfill a uma
+          fonte específica como o Google Ads — ela descreve o recurso de forma geral
+          para o serviço.
+  - prompt: Uma equipe está migrando um banco MySQL rodando em uma instância Amazon
+      RDS para o Cloud SQL usando o Database Migration Service, com um job de
+      migração contínua. Depois que o atraso de replicação chega a zero, o que
+      a documentação orienta fazer antes de promover a instância de destino?
+    source_url: https://cloud.google.com/database-migration/docs/mysql/quickstart
+    verified: true
+    choices:
+      - text: Parar as escritas na fonte antes de promover a instância de destino
+        correct: true
+        explanation: A documentação descreve o passo de promoção do job de migração
+          como algo a ser feito "quando o atraso de replicação chegar a zero", o
+          que exige parar as escritas na origem antes da promoção.
+      - text: Reiniciar o job de migração do zero para garantir consistência
+        correct: false
+        explanation: A documentação não orienta reiniciar o job de migração quando
+          o atraso de replicação chega a zero — o passo descrito é promover a instância,
+          não recriar o job.
+      - text: Excluir a instância de origem imediatamente para liberar recursos
+        correct: false
+        explanation: A documentação não menciona excluir a origem como parte do
+          fluxo descrito de promoção — o passo relevante é parar as escritas antes
+          de promover o destino.
+      - text: Trocar o job de migração contínua para migração pontual (one-time)
+        correct: false
+        explanation: A documentação não descreve uma troca de tipo de job nessa
+          etapa — o fluxo é parar escritas na origem e então promover a instância
+          de destino já usando o job de migração contínua configurado.

@@ -22,6 +22,15 @@ de certificação reais (braindumps), mesmo que apareçam numa busca.
 | `preparacao-visualizacao` | https://cloud.google.com/bigquery/docs/bi-engine-intro |
 | `preparacao-ia-ml` | https://cloud.google.com/bigquery/docs/bqml-introduction |
 | `compartilhamento-dados` | https://cloud.google.com/bigquery/docs/analytics-hub-introduction · https://cloud.google.com/bigquery/docs/authorized-views |
+| `seguranca-compliance-design` | https://cloud.google.com/iam/docs/overview · https://cloud.google.com/kms/docs/key-management-service · https://cloud.google.com/sensitive-data-protection/docs |
+| `confiabilidade-fidelidade-design` | https://cloud.google.com/dataform/docs/overview · https://cloud.google.com/dataflow/docs/guides/monitoring-overview |
+| `flexibilidade-portabilidade` | https://cloud.google.com/dataplex/docs/introduction |
+| `migracao-dados` | https://cloud.google.com/bigquery/docs/dts-introduction · https://cloud.google.com/database-migration/docs/mysql/quickstart |
+| `otimizacao-recursos` | https://cloud.google.com/dataproc/docs/concepts/overview |
+| `automacao-repetibilidade` | https://cloud.google.com/composer/docs/composer-2/write-dags |
+| `organizacao-workloads` | https://cloud.google.com/bigquery/docs/editions-intro |
+| `monitoramento-troubleshooting` | https://cloud.google.com/bigquery/docs/information-schema-intro · https://cloud.google.com/logging/docs/overview |
+| `consciencia-falhas-mitigacao` | https://cloud.google.com/sql/docs/mysql/replication · https://cloud.google.com/memorystore/docs/redis/redis-overview |
 
 ## AWS — Data Engineer Associate (DEA-C01)
 

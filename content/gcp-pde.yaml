@@ -1049,3 +1049,745 @@ domains:
         correct: false
         explanation: A documentação aplica a mesma restrição de região tanto pra authorized
           views quanto pra authorized materialized views.
+- name: Designing data processing systems
+  slug: designing-data-processing
+  weight_pct: 22
+  order: 1
+  topics:
+  - name: Segurança e Compliance no Design
+    slug: seguranca-compliance-design
+    order: 1
+    questions:
+    - prompt: Uma engenheira de dados está configurando uma service account que só
+        precisa publicar mensagens em um tópico específico do Pub/Sub dentro de um
+        pipeline de produção. A equipe de segurança pediu para evitar papéis básicos
+        como Editor ou Owner. Qual abordagem segue o princípio de menor privilégio
+        recomendado pela documentação do IAM?
+      choices:
+      - text: Conceder um papel predefinido específico do serviço, como roles/pubsub.publisher
+        correct: true
+        explanation: A documentação do IAM define papéis predefinidos como papéis
+          gerenciados pelos próprios serviços do Google Cloud, contendo permissões
+          para tarefas comuns — citando explicitamente roles/pubsub.publisher como
+          exemplo de papel predefinido para publicar em tópicos do Pub/Sub.
+      - text: Conceder o papel básico Editor na service account
+        correct: false
+        explanation: A documentação descreve os papéis básicos (como Editor e Owner)
+          como "altamente permissivos, fornecendo acesso amplo aos serviços do Google
+          Cloud" e explicitamente os marca como não adequados para uso em produção.
+      - text: Conceder o papel básico Owner na service account
+        correct: false
+        explanation: Owner é ainda mais permissivo que Editor entre os papéis básicos,
+          e a documentação do IAM indica que papéis básicos não são adequados para
+          uso em produção.
+      - text: Conceder a permissão pubsub.topics.publish diretamente à service account,
+          sem associá-la a um papel
+        correct: false
+        explanation: Segundo a documentação do IAM, permissões não podem ser concedidas
+          diretamente a um principal — elas só podem ser atribuídas por meio de um
+          papel (role), via um binding na política.
+    - prompt: Uma organização precisa criptografar dados sensíveis no BigQuery com
+        chaves cuja rotação automática, ativação/desativação e destruição de versões
+        permaneçam sob controle da própria organização — sem depender de coordenação
+        manual com um provedor de chaves externo. Qual opção do Cloud KMS atende a
+        esse requisito?
+      choices:
+      - text: Chaves gerenciadas pelo cliente (CMEK)
+        correct: true
+        explanation: A documentação do Cloud KMS afirma que, com CMEKs, o cliente
+          controla o cronograma de rotação automática da chave, os papéis e permissões
+          do IAM, e pode habilitar, desabilitar ou destruir versões da chave.
+      - text: Chaves externas via Cloud EKM
+        correct: false
+        explanation: A documentação indica que chaves externas (Cloud EKM) residem
+          em sistemas de terceiros e exigem rotação manual "em coordenação com o Cloud
+          EKM e o provedor de EKM" — o oposto do controle automático pedido no cenário.
+      - text: Chaves fornecidas pelo cliente (CSEK)
+        correct: false
+        explanation: A documentação restringe CSEKs ao uso com Cloud Storage e Compute
+          Engine (este último já descontinuado para CSEK), com material de chave fornecido
+          sob demanda pelo usuário — não é a opção usada para criptografar dados no
+          BigQuery.
+      - text: Chaves de software padrão gerenciadas inteiramente pelo Google, sem
+          configuração pelo cliente
+        correct: false
+        explanation: O cenário exige que a organização controle o cronograma de rotação
+          e o ciclo de vida das versões da chave, o que é a definição de CMEK na documentação
+          — uma chave totalmente gerenciada pelo Google sem input do cliente não atende
+          a esse controle.
+    - prompt: Uma equipe de compliance precisa identificar automaticamente números
+        de cartão de crédito armazenados em uma tabela do BigQuery, usando detectores
+        prontos do Google Cloud em vez de escrever expressões regulares manualmente.
+        Qual recurso do Sensitive Data Protection atende a essa necessidade?
+      choices:
+      - text: Os detectores de infoType integrados
+        correct: true
+        explanation: A documentação do Sensitive Data Protection afirma que a plataforma
+          inclui "mais de 200 detectores de infoType integrados", permitindo classificar
+          tipos de dados sensíveis sem a necessidade de criar detectores customizados.
+      - text: Um detector customizado criado a partir de uma expressão regular escrita
+          pela equipe
+        correct: false
+        explanation: A documentação trata detectores customizados via regex como uma
+          opção adicional para quando os detectores integrados não cobrem um padrão
+          específico — o cenário pede justamente evitar escrever regex manualmente,
+          o que aponta para os detectores integrados, não para os customizados.
+      - text: A técnica de date-shifting
+        correct: false
+        explanation: Date-shifting é listado na documentação como uma técnica de de-identificação
+          (transformação de dados), não como um mecanismo de detecção de tipos de
+          dados sensíveis como números de cartão de crédito.
+      - text: A Análise de Risco baseada em k-anonimato
+        correct: false
+        explanation: A documentação descreve a Análise de Risco (com métricas como
+          k-anonimato e l-diversidade) como uma avaliação de dados estruturados, não
+          como o mecanismo de detecção de tipos de infoType como cartões de crédito.
+  - name: Confiabilidade e Fidelidade no Design
+    slug: confiabilidade-fidelidade-design
+    order: 2
+    questions:
+    - prompt: Uma analista de dados quer garantir que uma tabela transformada no Dataform
+        nunca tenha valores nulos numa coluna de chave e nunca tenha valores duplicados
+        nessa mesma coluna, com a verificação rodando automaticamente depois que a
+        tabela é criada. Qual recurso do Dataform atende a essa necessidade?
+      choices:
+      - text: Assertions definidas no bloco de config do arquivo SQLX
+        correct: true
+        explanation: A documentação do Dataform descreve assertions como testes automatizados
+          de qualidade de dados que verificam "unicidade, valores nulos ou uma condição
+          customizada", definidos no bloco de config do SQLX e executados depois que
+          a tabela é criada.
+      - text: A função ref() usada para referenciar outras tabelas do projeto
+        correct: false
+        explanation: A documentação descreve ref() como o mecanismo para referenciar
+          tabelas definidas no projeto Dataform em vez de fixar nomes de schema/tabela
+          — ele resolve dependências, não valida qualidade de dados.
+      - text: A compilação hermética do Dataform
+        correct: false
+        explanation: A documentação descreve a compilação hermética como a garantia
+          de que o mesmo código SQLX sempre compila para o mesmo SQL, em um ambiente
+          isolado sem acesso à internet — isso garante reprodutibilidade da compilação,
+          não checagem de nulos/duplicados nos dados.
+      - text: A integração do Dataform com repositórios Git
+        correct: false
+        explanation: A documentação descreve a integração com Git (GitHub, GitLab,
+          Azure DevOps, Bitbucket) como controle de versão do código do workflow,
+          sem relação com testes de qualidade dos dados em si.
+    - prompt: Um pipeline de streaming no Dataflow está apresentando atraso crescente
+        entre o momento em que os eventos chegam e o momento em que são processados.
+        Qual métrica disponível na interface de monitoramento do Dataflow foi criada
+        especificamente para acompanhar isso em jobs de streaming?
+      choices:
+      - text: Data freshness (atualização dos dados)
+        correct: true
+        explanation: A documentação de monitoramento do Dataflow lista "data freshness"
+          como uma métrica exibida na visão de detalhes de execução especificamente
+          para jobs de streaming, junto com o progresso dos workers em jobs batch.
+      - text: Estimated cost (custo estimado do job)
+        correct: false
+        explanation: A documentação descreve "estimated cost" como o cálculo de despesas
+          previstas com base no consumo de recursos — não é a métrica usada para medir
+          atraso entre chegada e processamento de eventos.
+      - text: Job graph (representação gráfica do pipeline)
+        correct: false
+        explanation: A documentação descreve o job graph como uma representação gráfica
+          do pipeline mostrando resumo do job, logs e informações de etapas — é uma
+          visualização estrutural, não uma métrica de atraso.
+      - text: Estágios de execução em jobs batch
+        correct: false
+        explanation: A documentação associa "estágios de execução" e progresso de
+          workers especificamente a jobs batch, enquanto data freshness é a métrica
+          voltada a jobs de streaming — o cenário descrito é de streaming.
+    - prompt: Uma engenheira percebe que, ocasionalmente, partes dos gráficos de monitoramento
+        de um job do Dataflow aparecem em branco, sem dados para alguns pontos no
+        tempo. Segundo a documentação do Dataflow, o que a documentação afirma sobre
+        esse comportamento?
+      choices:
+      - text: Os dados do job às vezes ficam indisponíveis de forma intermitente,
+          e quando isso acontece, aparecem lacunas nos gráficos de monitoramento
+        correct: true
+        explanation: A documentação afirma literalmente que "às vezes os dados do
+          job ficam intermitentemente indisponíveis. Quando dados estão faltando,
+          aparecem lacunas nos gráficos de monitoramento do job" — é um comportamento
+          conhecido e documentado, não uma falha do pipeline.
+      - text: Isso indica corrupção permanente dos dados do pipeline
+        correct: false
+        explanation: A documentação trata isso como indisponibilidade intermitente
+          dos dados de monitoramento, não como corrupção dos dados processados pelo
+          pipeline.
+      - text: Isso só acontece em jobs batch, nunca em jobs de streaming
+        correct: false
+        explanation: A documentação não restringe esse comportamento a jobs batch;
+          ela descreve de forma geral que dados de monitoramento do job podem ficar
+          intermitentemente indisponíveis.
+      - text: É necessário reiniciar o job manualmente sempre que isso ocorrer
+        correct: false
+        explanation: A documentação não recomenda reiniciar o job por causa de lacunas
+          nos gráficos de monitoramento — ela apenas descreve o comportamento como
+          uma indisponibilidade intermitente dos dados exibidos.
+  - name: Flexibilidade e Portabilidade
+    slug: flexibilidade-portabilidade
+    order: 3
+    questions:
+    - prompt: Uma organização tem dados espalhados entre BigQuery, Cloud Storage,
+        Spanner, AlloyDB e um banco Oracle on-premises, e quer descoberta e governança
+        centralizadas desses dados sem precisar migrar tudo para um único sistema
+        de armazenamento. Qual produto do Google Cloud foi desenhado para esse cenário?
+      choices:
+      - text: Dataplex (atualmente também chamado de Knowledge Catalog)
+        correct: true
+        explanation: A documentação descreve o Dataplex (renomeado para Knowledge
+          Catalog) como um catálogo que "ingere metadados" de BigQuery, Cloud Storage,
+          Spanner, AlloyDB for PostgreSQL, Cloud SQL, Pub/Sub e Vertex AI, além de
+          conectores de terceiros como Oracle, fornecendo contexto e governança unificados
+          sem exigir migração dos dados para um único sistema.
+      - text: BigQuery Data Transfer Service
+        correct: false
+        explanation: O BigQuery Data Transfer Service automatiza a movimentação de
+          dados para dentro do BigQuery a partir de fontes específicas — ele não oferece
+          descoberta e governança centralizada de dados que continuam espalhados em
+          múltiplos sistemas.
+      - text: Database Migration Service
+        correct: false
+        explanation: O Database Migration Service migra bancos de dados de origem
+          (como MySQL) para destinos no Cloud SQL — seu objetivo é mover dados, não
+          catalogar e governar dados que permanecem distribuídos entre sistemas diferentes.
+      - text: Cloud KMS
+        correct: false
+        explanation: Cloud KMS gerencia chaves criptográficas; não tem relação com
+          descoberta, catalogação ou governança de dados distribuídos entre sistemas
+          de armazenamento diferentes.
+    - prompt: Uma equipe de dados quer que o catálogo de dados descubra automaticamente
+        metadados de um banco Oracle on-premises e de um SQL Server hospedado em outra
+        nuvem, sem precisar escrever um conector customizado do zero. Segundo a documentação,
+        isso é possível?
+      choices:
+      - text: Sim — o Dataplex/Knowledge Catalog suporta conectores de terceiros para
+          Oracle, MySQL, PostgreSQL e SQL Server via pipelines de conectividade gerenciados
+        correct: true
+        explanation: A documentação afirma explicitamente que o sistema "também suporta
+          conectores de banco de dados de terceiros (Oracle, MySQL, PostgreSQL, SQL
+          Server) e fontes customizadas por meio de pipelines de conectividade gerenciados."
+      - text: Não — o catálogo só ingere metadados de serviços nativos do Google Cloud,
+          como BigQuery e Cloud Storage
+        correct: false
+        explanation: A documentação lista explicitamente conectores de terceiros para
+          Oracle, MySQL, PostgreSQL e SQL Server, além dos serviços nativos do Google
+          Cloud — a afirmação de que só suporta fontes nativas está incorreta.
+      - text: Só é possível para bancos MySQL, nenhum outro banco de terceiros é suportado
+        correct: false
+        explanation: A documentação lista quatro bancos de terceiros suportados por
+          conectores (Oracle, MySQL, PostgreSQL, SQL Server), não apenas MySQL.
+      - text: Não — é necessário primeiro migrar os dados desses bancos para o BigQuery
+        correct: false
+        explanation: A documentação descreve conectores que ingerem metadados diretamente
+          das fontes de terceiros; não exige migração prévia dos dados para o BigQuery.
+    - prompt: O Dataplex foi renomeado para Knowledge Catalog. Uma equipe que já tem
+        pipelines e automações usando a API, a CLI e papéis do IAM do Dataplex configurados
+        precisa saber se essa mudança de nome vai quebrar sua automação existente.
+        O que a documentação afirma sobre isso?
+      choices:
+      - text: A API, a biblioteca cliente, a CLI e os nomes de IAM permanecem inalterados,
+          e implantações existentes continuam operacionais sem migração manual
+        correct: true
+        explanation: A documentação afirma que, apesar da renomeação para Knowledge
+          Catalog, "a API, a biblioteca cliente, a CLI e os nomes de IAM permanecem
+          inalterados" e que "implantações, APIs e configurações existentes do Dataplex
+          continuam operacionais", sem exigir migração manual.
+      - text: Todos os papéis do IAM precisam ser recriados com o prefixo "knowledgecatalog"
+        correct: false
+        explanation: A documentação afirma o oposto — os nomes de IAM permanecem inalterados
+          após a renomeação, então não é necessário recriar papéis.
+      - text: A API muda de nome e todas as integrações programáticas precisam ser
+          reescritas
+        correct: false
+        explanation: A documentação afirma explicitamente que a API permanece inalterada
+          apesar da renomeação do produto, portanto integrações existentes não precisam
+          ser reescritas por causa do rebranding.
+      - text: É necessário migrar manualmente cada configuração existente para o novo
+          produto antes de continuar usando o serviço
+        correct: false
+        explanation: A documentação afirma que não é necessária migração manual —
+          implantações existentes continuam operacionais normalmente após a renomeação.
+  - name: Migração de Dados
+    slug: migracao-dados
+    order: 4
+    questions:
+    - prompt: Uma equipe quer usar o BigQuery Data Transfer Service para carregar
+        dados agendados de um banco Amazon Redshift para dentro do BigQuery, e também
+        pediram para usar o mesmo serviço para exportar os resultados de uma tabela
+        do BigQuery de volta para um bucket do Cloud Storage. Isso é possível com
+        o BigQuery Data Transfer Service?
+      choices:
+      - text: Só a primeira parte é possível — o BigQuery Data Transfer Service não
+          pode ser usado para tirar dados de dentro do BigQuery
+        correct: true
+        explanation: A documentação lista o Amazon Redshift entre as fontes de dados
+          suportadas para carregar dados no BigQuery, mas também afirma explicitamente
+          que "você não pode usar o BigQuery Data Transfer Service para transferir
+          dados para fora do BigQuery."
+      - text: As duas operações são possíveis com o BigQuery Data Transfer Service
+        correct: false
+        explanation: A documentação afirma explicitamente que o serviço não pode ser
+          usado para transferir dados para fora do BigQuery, então a segunda operação
+          (exportar do BigQuery pro Cloud Storage) não é suportada por ele.
+      - text: Nenhuma das duas operações é possível — o serviço só transfere entre
+          contas do Google Ads
+        correct: false
+        explanation: A documentação lista dezenas de fontes suportadas além do Google
+          Ads, incluindo bancos de dados como Amazon Redshift, então a primeira afirmação
+          do cenário é factualmente possível.
+      - text: Só a exportação para o Cloud Storage é possível, não a importação do
+          Redshift
+        correct: false
+        explanation: É o inverso do que a documentação afirma — importar de fontes
+          como Redshift é suportado, enquanto exportar dados para fora do BigQuery
+          não é.
+    - prompt: Depois de configurar uma transferência agendada no BigQuery Data Transfer
+        Service, a equipe percebe que uma falha na fonte de dados fez com que 3 dias
+        de dados não fossem carregados. Segundo a documentação, o serviço oferece
+        algum mecanismo para recuperar esses dados sem reconfigurar a transferência
+        do zero?
+      choices:
+      - text: Sim — é possível iniciar backfills de dados para recuperar de interrupções
+          ou lacunas
+        correct: true
+        explanation: A documentação afirma que o serviço "suporta iniciar backfills
+          de dados para recuperar de quaisquer interrupções ou lacunas", exatamente
+          o cenário de dias perdidos por falha na fonte.
+      - text: Não — a única forma de recuperar os dados perdidos é excluir e recriar
+          a configuração de transferência
+        correct: false
+        explanation: A documentação descreve explicitamente a capacidade de iniciar
+          backfills para recuperar lacunas, sem necessidade de recriar a transferência.
+      - text: Não — o serviço não tem nenhum mecanismo de recuperação de falhas
+        correct: false
+        explanation: A documentação contradiz essa afirmação ao descrever explicitamente
+          o suporte a backfills para recuperação de interrupções e lacunas.
+      - text: Sim, mas somente para transferências vindas do Google Ads
+        correct: false
+        explanation: A documentação não restringe a capacidade de backfill a uma fonte
+          específica como o Google Ads — ela descreve o recurso de forma geral para
+          o serviço.
+    - prompt: Uma equipe está migrando um banco MySQL rodando em uma instância Amazon
+        RDS para o Cloud SQL usando o Database Migration Service, com um job de migração
+        contínua. Depois que o atraso de replicação chega a zero, o que a documentação
+        orienta fazer antes de promover a instância de destino?
+      choices:
+      - text: Parar as escritas na fonte antes de promover a instância de destino
+        correct: true
+        explanation: A documentação descreve o passo de promoção do job de migração
+          como algo a ser feito "quando o atraso de replicação chegar a zero", o que
+          exige parar as escritas na origem antes da promoção.
+      - text: Reiniciar o job de migração do zero para garantir consistência
+        correct: false
+        explanation: A documentação não orienta reiniciar o job de migração quando
+          o atraso de replicação chega a zero — o passo descrito é promover a instância,
+          não recriar o job.
+      - text: Excluir a instância de origem imediatamente para liberar recursos
+        correct: false
+        explanation: A documentação não menciona excluir a origem como parte do fluxo
+          descrito de promoção — o passo relevante é parar as escritas antes de promover
+          o destino.
+      - text: Trocar o job de migração contínua para migração pontual (one-time)
+        correct: false
+        explanation: A documentação não descreve uma troca de tipo de job nessa etapa
+          — o fluxo é parar escritas na origem e então promover a instância de destino
+          já usando o job de migração contínua configurado.
+- name: Maintaining and automating data workloads
+  slug: maintaining-automating-workloads
+  weight_pct: 18
+  order: 5
+  topics:
+  - name: Otimização de Recursos
+    slug: otimizacao-recursos
+    order: 1
+    questions:
+    - prompt: Uma equipe roda jobs de processamento em lote no Dataproc apenas algumas
+        horas por dia e quer reduzir o custo do cluster sem abrir mão do Spark. Segundo
+        a documentação, quais duas práticas ajudam a reduzir custo nesse cenário?
+      choices:
+      - text: Usar instâncias preemptivas e configurar exclusão/parada agendada do
+          cluster
+        correct: true
+        explanation: A documentação lista o suporte a instâncias preemptivas para
+          redução adicional de custo e menciona exclusão e parada agendada de cluster
+          entre os recursos de automação do serviço — ambos reduzem o custo de clusters
+          usados só parte do dia.
+      - text: Manter o cluster sempre ativo em tamanho fixo, sem autoscaling
+        correct: false
+        explanation: A documentação lista autoscaling como um dos recursos de automação
+          do serviço voltado a ajustar o cluster à demanda — manter um cluster fixo
+          sempre ativo vai contra a otimização de custo para uso não contínuo.
+      - text: Usar exclusivamente clusters de nó único (single-node) em produção
+        correct: false
+        explanation: A documentação lista clusters single-node como um tipo de configuração
+          disponível, mas não como a prática recomendada geral para reduzir custo
+          — instâncias preemptivas e desligamento agendado são os mecanismos de custo
+          citados.
+      - text: Migrar o processamento para fora do Dataproc, pois não há cobrança por
+          segundo
+        correct: false
+        explanation: A documentação afirma que o Dataproc usa "cobrança por segundo,
+          com cobrança mínima de um minuto" — ou seja, já tem granularidade fina de
+          billing, ao contrário do que a alternativa sugere.
+    - prompt: Um time de engenharia precisa provisionar um cluster Dataproc efêmero
+        para rodar um job pontual e quer saber quanto tempo, em média, leva para o
+        cluster ficar pronto para uso segundo a documentação.
+      choices:
+      - text: Em média, 90 segundos ou menos
+        correct: true
+        explanation: A documentação afirma que operações de cluster (criação, escalonamento,
+          desligamento) levam "90 segundos ou menos, em média", o que viabiliza o
+          uso de clusters efêmeros para jobs pontuais.
+      - text: Em média, 30 minutos
+        correct: false
+        explanation: A documentação cita um tempo médio de 90 segundos ou menos para
+          operações de cluster, muito abaixo dos 30 minutos.
+      - text: Em média, 10 minutos
+        correct: false
+        explanation: O valor citado na documentação para operações de cluster (criação,
+          escalonamento, desligamento) é de 90 segundos ou menos em média, não 10
+          minutos.
+      - text: Não há um tempo médio documentado, varia sem previsibilidade
+        correct: false
+        explanation: A documentação especifica um tempo médio concreto — 90 segundos
+          ou menos — para as operações de cluster, contradizendo a ideia de que não
+          há valor documentado.
+    - prompt: Uma equipe quer que o tamanho de um cluster Dataproc se ajuste automaticamente
+        conforme a carga de trabalho varia ao longo do dia, sem intervenção manual
+        de um administrador. Qual recurso do Dataproc atende a essa necessidade?
+      choices:
+      - text: Autoscaling
+        correct: true
+        explanation: A documentação lista o autoscaling entre os recursos de automação
+          do Dataproc, junto com gerenciamento automático de cluster sem envolvimento
+          de administrador.
+      - text: Cluster de alta disponibilidade (high-availability)
+        correct: false
+        explanation: A documentação descreve clusters de alta disponibilidade como
+          uma configuração de cluster voltada a resiliência/disponibilidade, não como
+          o mecanismo de ajuste automático de tamanho conforme a carga.
+      - text: Zero-scale cluster
+        correct: false
+        explanation: A documentação menciona clusters zero-scale como um tipo de configuração
+          de cluster, distinto do recurso de autoscaling que ajusta o tamanho do cluster
+          dinamicamente conforme a carga de trabalho.
+      - text: Rotação de cluster (cluster rotation)
+        correct: false
+        explanation: A documentação lista opções de rotação de cluster entre os recursos
+          de automação, mas o recurso especificamente descrito para ajuste de tamanho
+          conforme a carga é o autoscaling.
+  - name: Automação e Repetibilidade
+    slug: automacao-repetibilidade
+    order: 2
+    questions:
+    - prompt: Um engenheiro de dados está escrevendo uma DAG no Cloud Composer e pensa
+        em colocar um workflow inteiro de extração, transformação e carga dentro de
+        uma única task Python, para simplificar o código. Essa abordagem segue a boa
+        prática recomendada pela documentação?
+      choices:
+      - text: Não — cada task deve ser uma unidade de trabalho idempotente, e a documentação
+          orienta evitar encapsular um workflow de múltiplas etapas em uma única task
+        correct: true
+        explanation: A documentação afirma que "cada task deve ser uma unidade de
+          trabalho idempotente" e orienta explicitamente "evitar encapsular um workflow
+          de múltiplas etapas dentro de uma única task."
+      - text: Sim — colocar o workflow inteiro em uma task reduz a complexidade do
+          grafo de dependências e é a prática recomendada
+        correct: false
+        explanation: A documentação recomenda o oposto — dividir o trabalho em tasks
+          idempotentes e evitar concentrar um workflow de múltiplas etapas em uma
+          única task.
+      - text: Sim, desde que a task use o operador PythonOperator
+        correct: false
+        explanation: A documentação não condiciona essa prática ao operador usado
+          — ela orienta de forma geral evitar encapsular múltiplas etapas em uma única
+          task, independente do tipo de operador.
+      - text: A documentação não tem recomendação sobre esse ponto
+        correct: false
+        explanation: A documentação trata esse ponto explicitamente, recomendando
+          tasks como unidades de trabalho idempotentes e evitando múltiplas etapas
+          em uma task só.
+    - prompt: Uma DAG no Cloud Composer está falhando ocasionalmente por instabilidades
+        transitórias de rede ao chamar uma API externa, mas o time não quer que o
+        job inteiro seja marcado como falho por causa disso. Segundo a documentação,
+        qual configuração ajuda a evitar que a DAG inteira falhe nesses casos?
+      choices:
+      - text: Configurar default_task_retries com um valor diferente de zero, habilitando
+          retentativas de task
+        correct: true
+        explanation: A documentação recomenda "sobrescrever a configuração default_task_retries
+          com um valor diferente de zero" para habilitar retentativas de task e evitar
+          que a DAG inteira falhe por instabilidades transitórias; deixar o valor
+          em 0 desabilita as retentativas.
+      - text: Deixar default_task_retries configurado como 0
+        correct: false
+        explanation: A documentação afirma que configurar retries como 0 desabilita
+          as tentativas de retry — é o oposto do que ajudaria a lidar com falhas transitórias.
+      - text: Colocar várias DAGs no mesmo módulo Python para compartilhar estado
+        correct: false
+        explanation: A documentação recomenda evitar colocar múltiplos objetos DAG
+          em um único módulo Python por questões de tolerância a falhas — isso não
+          tem relação com retentativas de task após falhas transitórias.
+      - text: Reduzir o número de arquivos na pasta /dags para um único arquivo
+        correct: false
+        explanation: A documentação discute consolidar DAGs em menos arquivos como
+          uma prática de performance de parsing, não como o mecanismo para lidar com
+          falhas transitórias de rede em uma task — isso é função das retentativas.
+    - prompt: Um engenheiro está definindo o start_date de uma nova DAG no Cloud Composer
+        e cogita usar datetime.now() para que o valor seja sempre a data atual no
+        momento em que o Airflow processa o arquivo. Isso é recomendado pela documentação?
+      choices:
+      - text: Não — start_date deve ser um ponto fixo no tempo, não um valor dinâmico
+        correct: true
+        explanation: A documentação afirma que "start_date descreve quando uma DAG
+          é válida / pode ser executada. Defina isso como um ponto fixo no tempo,
+          em vez de dinamicamente" — usar datetime.now() contraria essa orientação.
+      - text: Sim — usar datetime.now() é a forma recomendada de definir start_date
+        correct: false
+        explanation: A documentação orienta o oposto — start_date deve ser fixo, não
+          calculado dinamicamente a cada parse do arquivo.
+      - text: Sim, mas apenas em DAGs com agendamento manual (schedule_interval=None)
+        correct: false
+        explanation: A documentação não faz essa distinção por tipo de agendamento
+          — a orientação de usar um ponto fixo no tempo para start_date é geral.
+      - text: A documentação não recomenda nada específico sobre como definir start_date
+        correct: false
+        explanation: A documentação é explícita sobre esse ponto, orientando que start_date
+          seja fixado em vez de definido dinamicamente.
+  - name: Organização de Workloads
+    slug: organizacao-workloads
+    order: 3
+    questions:
+    - prompt: Uma organização usa a edição Standard do BigQuery e quer criar uma reserva
+        de slots de 2.000 slots para um projeto de análise crítico. Segundo a documentação
+        de editions, isso é possível na edição Standard?
+      choices:
+      - text: Não — a edição Standard tem um limite máximo de 1.600 slots por reserva
+        correct: true
+        explanation: A documentação de editions lista 1.600 slots como o "máximo de
+          reserva" (Max Reservation) para a edição Standard, abaixo dos 2.000 slots
+          pretendidos no cenário.
+      - text: Sim — a edição Standard não impõe limite máximo de slots por reserva
+        correct: false
+        explanation: A documentação especifica explicitamente um limite máximo de
+          1.600 slots por reserva para a edição Standard, então existe sim um teto.
+      - text: Sim, mas apenas se a reserva for do tipo BACKGROUND
+        correct: false
+        explanation: A documentação indica que o tipo de assignment BACKGROUND é um
+          recurso disponível a partir da edição Enterprise/Enterprise Plus, não uma
+          forma de contornar o limite de slots da edição Standard.
+      - text: Não — a edição Standard não permite nenhuma reserva de slots, apenas
+          pricing on-demand
+        correct: false
+        explanation: A documentação mostra que a edição Standard suporta reservas
+          de slots com um teto de 1.600 slots — ela não é limitada apenas ao modelo
+          on-demand.
+    - prompt: Um time de dados quer configurar um assignment do tipo CONTINUOUS para
+        suportar consultas contínuas (continuous queries) no BigQuery. A organização
+        está na edição Standard. Isso é suportado?
+      choices:
+      - text: Não — assignments do tipo CONTINUOUS só estão disponíveis a partir da
+          edição Enterprise/Enterprise Plus
+        correct: true
+        explanation: A documentação mostra que a edição Standard suporta apenas assignments
+          do tipo QUERY e PIPELINE, enquanto CONTINUOUS (usado para continuous queries)
+          é um tipo de assignment expandido disponível em Enterprise/Enterprise Plus.
+      - text: Sim — todos os tipos de assignment, incluindo CONTINUOUS, estão disponíveis
+          em qualquer edição
+        correct: false
+        explanation: A documentação restringe a edição Standard aos tipos de assignment
+          QUERY e PIPELINE; CONTINUOUS é exclusivo de Enterprise/Enterprise Plus.
+      - text: Sim, mas só no modelo de pricing on-demand, nunca em edições
+        correct: false
+        explanation: A documentação associa o assignment CONTINUOUS às edições Enterprise/Enterprise
+          Plus, não descreve essa restrição em termos de on-demand vs. edições.
+      - text: Não — nenhuma edição do BigQuery suporta assignments do tipo CONTINUOUS
+        correct: false
+        explanation: A documentação lista CONTINUOUS como um tipo de assignment suportado
+          nas edições Enterprise e Enterprise Plus, então a afirmação de que nenhuma
+          edição suporta está incorreta.
+    - prompt: Uma equipe de ciência de dados quer usar BigQuery ML para treinar modelos
+        diretamente com SQL, mas a organização está atualmente na edição Standard
+        do BigQuery. Segundo a documentação, isso vai funcionar?
+      choices:
+      - text: Não — BigQuery ML está bloqueado na edição Standard; é preciso Enterprise,
+          Enterprise Plus ou on-demand
+        correct: true
+        explanation: A documentação lista o BigQuery ML como bloqueado (Blocked) na
+          edição Standard, estando disponível apenas em Enterprise, Enterprise Plus
+          e no modelo on-demand.
+      - text: Sim — BigQuery ML está disponível em todas as edições, incluindo Standard
+        correct: false
+        explanation: A documentação especifica que o BigQuery ML está bloqueado especificamente
+          na edição Standard, contrariando essa afirmação.
+      - text: Não — BigQuery ML não está disponível em nenhuma edição, só via Vertex
+          AI
+        correct: false
+        explanation: A documentação mostra que BigQuery ML está disponível em Enterprise,
+          Enterprise Plus e on-demand — não é uma funcionalidade indisponível em todas
+          as edições.
+      - text: Sim, mas só se a equipe migrar para o modelo on-demand permanentemente
+        correct: false
+        explanation: Migrar para on-demand é uma das formas de ter acesso ao BigQuery
+          ML segundo a documentação, mas não é a única — Enterprise e Enterprise Plus
+          também suportam, então "só" migrando para on-demand está incorreto.
+  - name: Monitoramento e Troubleshooting
+    slug: monitoramento-troubleshooting
+    order: 4
+    questions:
+    - prompt: Um engenheiro de dados quer investigar, via SQL, o consumo de armazenamento
+        de todas as tabelas de um dataset do BigQuery para identificar quais tabelas
+        estão custando mais em storage. Qual view do INFORMATION_SCHEMA foi feita
+        especificamente para esse tipo de análise?
+      choices:
+      - text: TABLE_STORAGE
+        correct: true
+        explanation: A documentação lista TABLE_STORAGE entre as views de "Table &
+          Storage Analysis" do INFORMATION_SCHEMA, descrita especificamente para consumo
+          de armazenamento (storage consumption).
+      - text: JOBS_BY_USER
+        correct: false
+        explanation: A documentação descreve JOBS_BY_USER como uma view de monitoramento
+          de jobs filtrada por usuário, não como uma view voltada ao consumo de armazenamento
+          de tabelas.
+      - text: OBJECT_PRIVILEGES
+        correct: false
+        explanation: A documentação descreve OBJECT_PRIVILEGES como uma view de auditoria
+          de controle de acesso, não de consumo de armazenamento.
+      - text: ROUTINES
+        correct: false
+        explanation: A documentação descreve ROUTINES como uma view de metadados de
+          procedures/functions, sem relação com consumo de armazenamento de tabelas.
+    - prompt: Um time de FinOps quer investigar, via SQL, quais usuários rodaram os
+        jobs mais caros no BigQuery em um determinado período, para uma auditoria
+        de custos. Qual categoria de views do INFORMATION_SCHEMA foi desenhada para
+        esse tipo de investigação?
+      choices:
+      - text: As views de monitoramento de jobs, como JOBS e JOBS_BY_USER
+        correct: true
+        explanation: A documentação agrupa JOBS, JOBS_BY_USER, JOBS_BY_FOLDER e JOBS_BY_ORGANIZATION
+          como views de "Jobs Monitoring", incluindo filtragem de jobs por usuário
+          — exatamente o tipo de investigação de auditoria de custo por usuário descrita
+          no cenário.
+      - text: As views de reservas e capacidade, como RESERVATIONS e CAPACITY_COMMITMENTS
+        correct: false
+        explanation: A documentação descreve essas views como voltadas à alocação
+          de recursos (reservas e compromissos de capacidade), não ao rastreamento
+          de jobs por usuário.
+      - text: As views de estrutura de dados, como SCHEMATA e COLUMNS
+        correct: false
+        explanation: A documentação descreve SCHEMATA e COLUMNS como views de metadados
+          de estrutura de datasets/colunas, não de rastreamento de jobs por usuário.
+      - text: As views de índices, como SEARCH_INDEXES e VECTOR_INDEXES
+        correct: false
+        explanation: A documentação descreve essas views como voltadas à configuração
+          de índices de busca/vetoriais, sem relação com auditoria de jobs por usuário.
+    - prompt: Um time de SRE quer criar um gráfico que acompanhe a tendência de latência
+        de uma aplicação ao longo do tempo, organizando os valores de tempo de resposta
+        em um histograma, usando o Cloud Logging. Qual tipo de métrica baseada em
+        log atende a essa necessidade?
+      choices:
+      - text: Métrica de distribuição (distribution metric)
+        correct: true
+        explanation: A documentação descreve métricas de distribuição como aquelas
+          que "extraem e organizam dados como tempos de resposta em histogramas",
+          citando observar tendências de latência como um dos usos.
+      - text: Métrica de contador (counter metric)
+        correct: false
+        explanation: A documentação descreve métricas de contador como aquelas que
+          "contam entradas de log que correspondem a critérios específicos" — úteis
+          para contagem de erros, não para organizar tempos de resposta em histogramas.
+      - text: Um log sink apontando para o BigQuery
+        correct: false
+        explanation: A documentação descreve sinks como o mecanismo de roteamento
+          de logs para destinos como BigQuery, Cloud Storage ou Pub/Sub — não é o
+          mecanismo de criação de métricas de histograma de latência.
+      - text: Uma política de alerta baseada em log
+        correct: false
+        explanation: A documentação descreve alertas baseados em log como notificações
+          quando padrões ou tendências específicas aparecem nos logs, não como o mecanismo
+          que organiza tempos de resposta em um histograma.
+  - name: Consciência de Falhas e Mitigação de Impacto
+    slug: consciencia-falhas-mitigacao
+    order: 5
+    questions:
+    - prompt: Uma equipe configurou apenas read replicas para uma instância primária
+        do Cloud SQL for MySQL, pensando que isso já garante failover automático em
+        caso de queda da instância primária. Segundo a documentação, essa suposição
+        está correta?
+      choices:
+      - text: Não — read replicas não fornecem capacidade de failover; é preciso configurar
+          alta disponibilidade separadamente
+        correct: true
+        explanation: A documentação afirma explicitamente que "read replicas não fornecem
+          capacidade de failover" e orienta configurar a instância para alta disponibilidade
+          separadamente para obter failover.
+      - text: Sim — qualquer read replica pode assumir o papel de primária automaticamente
+          em caso de queda
+        correct: false
+        explanation: A documentação afirma o oposto — read replicas padrão não têm
+          capacidade de failover automático; isso exige configuração de alta disponibilidade
+          à parte.
+      - text: Sim, mas só se houver pelo menos 10 read replicas configuradas
+        correct: false
+        explanation: A documentação não condiciona failover a uma quantidade mínima
+          de read replicas — ela recomenda limitar a 10 ou menos read replicas diretas
+          por razões de capacidade, sem relação com failover.
+      - text: Sim, desde que as replicas estejam na mesma região da instância primária
+        correct: false
+        explanation: A documentação não descreve failover automático de read replicas
+          condicionado à região — ela afirma de forma geral que read replicas não
+          fornecem capacidade de failover, independente da região.
+    - prompt: Uma aplicação usa Memorystore for Redis na camada Basic Tier para cache
+        de sessão, e a equipe assume que, se o nó cair, o Memorystore promove automaticamente
+        um nó replicado sem perda de disponibilidade. Segundo a documentação, essa
+        suposição está correta?
+      choices:
+      - text: Não — a camada Basic Tier não tem replicação nem failover automático;
+          isso só existe na camada Standard Tier
+        correct: true
+        explanation: A documentação descreve a Basic Tier como um "cache sem replicação",
+          sem redundância ou failover automático — esses recursos, incluindo failover
+          automático e SLA de 99,9%, são descritos como parte da Standard Tier.
+      - text: Sim — todas as camadas do Memorystore for Redis incluem failover automático
+        correct: false
+        explanation: A documentação distingue explicitamente a Basic Tier (sem replicação)
+          da Standard Tier (com replicação e failover automático) — nem toda camada
+          oferece esse recurso.
+      - text: Sim, porque o Memorystore for Redis sempre mantém até cinco réplicas
+          por padrão, independentemente da camada
+        correct: false
+        explanation: A documentação associa "até cinco réplicas" especificamente à
+          Standard Tier, não como padrão universal de todas as camadas — a Basic Tier
+          não tem réplicas.
+      - text: Sim, desde que o snapshot RDB mais recente tenha menos de um minuto
+        correct: false
+        explanation: A documentação trata snapshots RDB como um mecanismo de persistência
+          para backup, não como condição para failover automático — a Basic Tier simplesmente
+          não oferece failover automático, independentemente da idade do snapshot.
+    - prompt: Uma arquitetura de Cloud SQL for MySQL usa replicas em cascata para
+        reduzir a carga de replicação sobre a instância primária. A equipe quer saber,
+        segundo a documentação, quantos níveis de hierarquia (incluindo a primária)
+        essa topologia suporta no total.
+      choices:
+      - text: Até quatro níveis no total, incluindo a instância primária
+        correct: true
+        explanation: A documentação afirma que replicas em cascata suportam "até quatro
+          níveis no total (incluindo a primária)", com até oito replicas irmãs por
+          nível.
+      - text: Até dez níveis no total
+        correct: false
+        explanation: O limite de dez mencionado na documentação se refere ao número
+          recomendado de read replicas diretas da instância primária, não ao número
+          de níveis em uma topologia de replicas em cascata, que é de até quatro.
+      - text: Não há limite de níveis para replicas em cascata
+        correct: false
+        explanation: A documentação especifica um limite concreto de até quatro níveis
+          no total para replicas em cascata, contrariando a ideia de que não há limite.
+      - text: Apenas dois níveis — a primária e um único nível de replicas
+        correct: false
+        explanation: A documentação descreve suporte a até quatro níveis no total,
+          não apenas dois, permitindo replicas em cascata com múltiplos níveis de
+          hierarquia.

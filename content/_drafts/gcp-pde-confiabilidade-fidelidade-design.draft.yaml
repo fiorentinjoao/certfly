@@ -1,0 +1,89 @@
+certification: gcp-pde
+domain_slug: designing-data-processing
+topic_slug: confiabilidade-fidelidade-design
+questions:
+  - prompt: Uma analista de dados quer garantir que uma tabela transformada no
+      Dataform nunca tenha valores nulos numa coluna de chave e nunca tenha valores
+      duplicados nessa mesma coluna, com a verificação rodando automaticamente
+      depois que a tabela é criada. Qual recurso do Dataform atende a essa necessidade?
+    source_url: https://cloud.google.com/dataform/docs/overview
+    verified: true
+    choices:
+      - text: Assertions definidas no bloco de config do arquivo SQLX
+        correct: true
+        explanation: A documentação do Dataform descreve assertions como testes
+          automatizados de qualidade de dados que verificam "unicidade, valores
+          nulos ou uma condição customizada", definidos no bloco de config do SQLX
+          e executados depois que a tabela é criada.
+      - text: A função ref() usada para referenciar outras tabelas do projeto
+        correct: false
+        explanation: A documentação descreve ref() como o mecanismo para referenciar
+          tabelas definidas no projeto Dataform em vez de fixar nomes de schema/tabela
+          — ele resolve dependências, não valida qualidade de dados.
+      - text: A compilação hermética do Dataform
+        correct: false
+        explanation: A documentação descreve a compilação hermética como a garantia
+          de que o mesmo código SQLX sempre compila para o mesmo SQL, em um ambiente
+          isolado sem acesso à internet — isso garante reprodutibilidade da compilação,
+          não checagem de nulos/duplicados nos dados.
+      - text: A integração do Dataform com repositórios Git
+        correct: false
+        explanation: A documentação descreve a integração com Git (GitHub, GitLab,
+          Azure DevOps, Bitbucket) como controle de versão do código do workflow,
+          sem relação com testes de qualidade dos dados em si.
+  - prompt: Um pipeline de streaming no Dataflow está apresentando atraso crescente
+      entre o momento em que os eventos chegam e o momento em que são processados.
+      Qual métrica disponível na interface de monitoramento do Dataflow foi criada
+      especificamente para acompanhar isso em jobs de streaming?
+    source_url: https://cloud.google.com/dataflow/docs/guides/monitoring-overview
+    verified: true
+    choices:
+      - text: Data freshness (atualização dos dados)
+        correct: true
+        explanation: A documentação de monitoramento do Dataflow lista "data freshness"
+          como uma métrica exibida na visão de detalhes de execução especificamente
+          para jobs de streaming, junto com o progresso dos workers em jobs batch.
+      - text: Estimated cost (custo estimado do job)
+        correct: false
+        explanation: A documentação descreve "estimated cost" como o cálculo de
+          despesas previstas com base no consumo de recursos — não é a métrica usada
+          para medir atraso entre chegada e processamento de eventos.
+      - text: Job graph (representação gráfica do pipeline)
+        correct: false
+        explanation: A documentação descreve o job graph como uma representação
+          gráfica do pipeline mostrando resumo do job, logs e informações de etapas
+          — é uma visualização estrutural, não uma métrica de atraso.
+      - text: Estágios de execução em jobs batch
+        correct: false
+        explanation: A documentação associa "estágios de execução" e progresso de
+          workers especificamente a jobs batch, enquanto data freshness é a métrica
+          voltada a jobs de streaming — o cenário descrito é de streaming.
+  - prompt: Uma engenheira percebe que, ocasionalmente, partes dos gráficos de
+      monitoramento de um job do Dataflow aparecem em branco, sem dados para
+      alguns pontos no tempo. Segundo a documentação do Dataflow, o que a
+      documentação afirma sobre esse comportamento?
+    source_url: https://cloud.google.com/dataflow/docs/guides/monitoring-overview
+    verified: true
+    choices:
+      - text: Os dados do job às vezes ficam indisponíveis de forma intermitente,
+          e quando isso acontece, aparecem lacunas nos gráficos de monitoramento
+        correct: true
+        explanation: A documentação afirma literalmente que "às vezes os dados do
+          job ficam intermitentemente indisponíveis. Quando dados estão faltando,
+          aparecem lacunas nos gráficos de monitoramento do job" — é um comportamento
+          conhecido e documentado, não uma falha do pipeline.
+      - text: Isso indica corrupção permanente dos dados do pipeline
+        correct: false
+        explanation: A documentação trata isso como indisponibilidade intermitente
+          dos dados de monitoramento, não como corrupção dos dados processados pelo
+          pipeline.
+      - text: Isso só acontece em jobs batch, nunca em jobs de streaming
+        correct: false
+        explanation: A documentação não restringe esse comportamento a jobs batch;
+          ela descreve de forma geral que dados de monitoramento do job podem ficar
+          intermitentemente indisponíveis.
+      - text: É necessário reiniciar o job manualmente sempre que isso ocorrer
+        correct: false
+        explanation: A documentação não recomenda reiniciar o job por causa de lacunas
+          nos gráficos de monitoramento — ela apenas descreve o comportamento como
+          uma indisponibilidade intermitente dos dados exibidos.
