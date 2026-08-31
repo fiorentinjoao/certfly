@@ -23,6 +23,12 @@ Side project solo. O backend (motor de regras + API) está funcional e testado p
 | Supabase real conectado (hoje roda em SQLite local) | ⏳ próximo passo |
 | Frontend Flutter | ✅ telas do core loop implementadas (dev target Linux); protótipo visual das 10 telas completo |
 
+## Screenshots
+
+<img src="docs/screenshots/track-screen.png" alt="Trilha de tópicos do CertFly (Flutter Web, build local)" width="320" />
+
+*Trilha de tópicos rodando localmente (Flutter Web + backend FastAPI local, sem Supabase real).*
+
 ## Contexto
 
 Origem do projeto: o dono é engenheiro de dados, estuda para certificações Google Cloud, e sente que o material disponível é fragmentado, denso, em inglês e sem estrutura de hábito. Ideia: um app estilo Duolingo que gamifica esse estudo.
