@@ -2,7 +2,17 @@
 
 > Duolingo para certificações técnicas — sessões diárias curtas, com repetição espaçada e domínio por tópico, para quem estuda certificações de dados nas 3 principais clouds (Google Cloud, AWS, Azure).
 
-Side project solo. O backend (motor de regras + API) está funcional e testado ponta a ponta contra SQLite local; falta conteúdo real (questões), conectar a um Supabase de verdade e o frontend Flutter.
+![status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
+![tipo](https://img.shields.io/badge/tipo-side%20project%20de%20estudo-blue)
+![backend](https://img.shields.io/badge/backend-FastAPI-009688)
+![frontend](https://img.shields.io/badge/frontend-Flutter-02569B)
+![db](https://img.shields.io/badge/db-Supabase%20%2F%20Postgres-3ECF8E)
+
+Side project solo, não é um produto em produção nem tem plano de virar SaaS — é o jeito que encontrei de estudar certificações de dados com mais estrutura de hábito. O backend (motor de regras + API) está funcional e testado ponta a ponta contra SQLite local; falta conteúdo real (questões), conectar a um Supabase de verdade e o frontend Flutter.
+
+**Sumário:** [Como é usar](#como-é-usar) · [Status atual](#status-atual-2026-08-09) · [Stack](#stack) · [Contexto](#contexto) · [Documentação](#documentação) · [Rodando localmente](#rodando-o-backend-localmente) · [Roadmap](#roadmap-imediato)
+
+---
 
 ## Como é usar
 
@@ -31,6 +41,8 @@ Side project solo. O backend (motor de regras + API) está funcional e testado p
 
 *Prints de um build local (Flutter Web + API FastAPI local, SQLite, sem Supabase real) — ver [Rodando o backend localmente](#rodando-o-backend-localmente) pra reproduzir.*
 
+---
+
 ## Status atual (2026-08-09)
 
 | Etapa | Status |
@@ -50,6 +62,20 @@ Side project solo. O backend (motor de regras + API) está funcional e testado p
 | Supabase real conectado (hoje roda em SQLite local) | ⏳ próximo passo |
 | Frontend Flutter | ✅ telas do core loop implementadas (dev target Linux); protótipo visual das 10 telas completo |
 
+---
+
+## Stack
+
+| Camada | Tecnologia | Papel |
+|---|---|---|
+| Frontend | Flutter (mobile-first, dev target web/Linux) | Trilha, sessões de estudo, perfil |
+| Backend | FastAPI + Pydantic | 5 endpoints do MVP, motor de regras exposto via API |
+| ORM / dados | SQLAlchemy | Repository pattern sobre SQLite (dev) / Postgres (prod) |
+| Auth + banco de produção | Supabase (Auth + Postgres) | Alvo de integração, ainda não conectado |
+| Motor do core loop | Python puro, sem I/O | SRS (SM-2 adaptado), mastery gate, XP/streak |
+
+---
+
 ## Contexto
 
 Origem do projeto: o dono é engenheiro de dados, estuda para certificações Google Cloud, e sente que o material disponível é fragmentado, denso, em inglês e sem estrutura de hábito. Ideia: um app estilo Duolingo que gamifica esse estudo.
@@ -59,6 +85,8 @@ Restrições de partida:
 - Background forte em dados/backend, mais fraco em frontend/UX
 - Quer projeto "bem feito": system design + TDD, não só "shippar rápido"
 - Ambição inicial de MVP em ~1 mês (spec foi cortado agressivamente para caber nisso)
+
+---
 
 ## Documentação
 
@@ -70,6 +98,8 @@ Restrições de partida:
 | [`docs/core-loop-srs.md`](docs/core-loop-srs.md) | Motor de mastery e repetição espaçada (SM-2 adaptado) — fórmulas e decisões fechadas |
 | [`docs/requirements.md`](docs/requirements.md) | Requisitos funcionais e não funcionais do MVP (RF/RNF) |
 | [`docs/system-design.md`](docs/system-design.md) | Stack, arquitetura, schema do banco, endpoints e plano de deploy do MVP |
+
+---
 
 ## Rodando o backend localmente
 
@@ -95,6 +125,8 @@ backend/app/
 └── auth.py      # validação do JWT do Supabase Auth
 ```
 
+---
+
 ## Roadmap imediato
 
 1. Requisitos funcionais e não funcionais ✅
@@ -109,6 +141,6 @@ backend/app/
 
 **Nota (2026-08-10):** o MVP passou a cobrir 3 certificações (1 por cloud) em vez de só GCP — ver `docs/product-spec.md`. Isso adia o lançamento (mais conteúdo pra escrever) em troca de uma proposta de valor mais forte.
 
-## Nota sobre origem deste documento
+---
 
-Este conjunto de docs foi reconstruído a partir de uma conversa no Claude.ai em 2026-08-06, recuperada e organizada via Claude Code. Pode haver pequenas lacunas em trechos intermediários da conversa original que não foram totalmente recuperados — revise e ajuste livremente.
+<sub>Este conjunto de docs foi reconstruído a partir de uma conversa no Claude.ai em 2026-08-06, recuperada e organizada via Claude Code. Pode haver pequenas lacunas em trechos intermediários da conversa original que não foram totalmente recuperados — revise e ajuste livremente.</sub>
