@@ -140,7 +140,3 @@ backend/app/
 9. Conectar a um projeto Supabase real (hoje só SQLite local)
 
 **Nota (2026-08-10):** o MVP passou a cobrir 3 certificações (1 por cloud) em vez de só GCP — ver `docs/product-spec.md`. Isso adia o lançamento (mais conteúdo pra escrever) em troca de uma proposta de valor mais forte.
-
----
-
-<sub>Este conjunto de docs foi reconstruído a partir de uma conversa no Claude.ai em 2026-08-06, recuperada e organizada via Claude Code. Pode haver pequenas lacunas em trechos intermediários da conversa original que não foram totalmente recuperados — revise e ajuste livremente.</sub>
