@@ -27,7 +27,7 @@ Um usuário estuda um pouco todo dia, com o motor de repetição espaçada garan
 ### Active
 
 - [ ] **Conteúdo ainda abaixo da meta** de ~15 perguntas/tópico (`docs/content-plan.md`): GCP 43 (era 18, +25 nesta sessão, mas ainda faltam os domínios "Designing data processing systems" e "Maintaining and automating data workloads", sem nenhum tópico escrito), AWS 9, Azure 8. Decisão em aberto (recomendada, não travada com o dono ainda): focar só GCP pro lançamento do MVP em vez das 3 certs completas.
-- [ ] **PR #7 aberto, não mesclado**: `fix: GCP entry-point gate bug + 25 grounded questions` — https://github.com/fiorentinjoao/certfly/pull/7. Contém um bug crítico corrigido (ver Key Decisions) + as 25 perguntas novas do GCP. CI verde, falta só o merge.
+- [ ] **PR #7 aberto, não mesclado**: `fix: GCP entry-point gate bug + 25 grounded questions` — https://github.com/joaoffiorentin/certfly/pull/7. Contém um bug crítico corrigido (ver Key Decisions) + as 25 perguntas novas do GCP. CI verde, falta só o merge.
 - [ ] Fallback de auth dev-only (HS256) em `backend/app/auth.py` — ainda não endereçado (3º gap do `CONCERNS.md`, os outros 2 já foram corrigidos)
 - [ ] **E-mail de produção**: confirmação de e-mail foi desativada manualmente no painel do Supabase (só pra destravar teste local) — precisa de SMTP customizado (Resend/SendGrid) configurado e confirmação reativada antes do lançamento real
 - [ ] **Google OAuth quebrado fora do desktop**: `_signInWithGoogle` em `login_screen.dart` usa `HttpServer.bind(InternetAddress.loopbackIPv4, ...)`, uma API de `dart:io` que não existe no Flutter Web — quebra sempre no navegador. Sem fluxo equivalente (deep link) implementado pro mobile ainda.
