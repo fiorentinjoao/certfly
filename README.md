@@ -4,6 +4,33 @@
 
 Side project solo. O backend (motor de regras + API) está funcional e testado ponta a ponta contra SQLite local; falta conteúdo real (questões), conectar a um Supabase de verdade e o frontend Flutter.
 
+## Como é usar
+
+<table>
+<tr>
+<td width="50%" align="center">
+<img src="docs/screenshots/track-screen.png" alt="Trilha de tópicos do CertFly, com streak, XP e domínios bloqueados até o mastery liberar" width="100%" />
+</td>
+<td width="50%" align="center">
+<img src="docs/screenshots/profile-screen.png" alt="Tela de perfil do CertFly, com XP total, streak, certificação ativa e preferências de estudo" width="100%" />
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+**Trilha da certificação.** Cada certificação vira uma trilha vertical de domínios e tópicos, no espírito do Duolingo pra idiomas. No topo, o streak do dia e o XP acumulado — o motor de hábito que sustenta a proposta do produto. Abaixo, os tópicos em sequência: o próximo já liberado com um "Começar", os seguintes bloqueados (🔒) até o motor de mastery confirmar 80% de domínio no tópico anterior — gate de desbloqueio validado no servidor, não só decorativo na tela.
+
+</td>
+<td valign="top">
+
+**Perfil.** XP total e streak consolidados, a certificação ativa (com opção de trocar entre as 3 clouds) e as preferências de estudo — onde entram lembretes e cadência da repetição espaçada. É o hub que fecha o loop de hábito iniciado na trilha.
+
+</td>
+</tr>
+</table>
+
+*Prints de um build local (Flutter Web + API FastAPI local, SQLite, sem Supabase real) — ver [Rodando o backend localmente](#rodando-o-backend-localmente) pra reproduzir.*
+
 ## Status atual (2026-08-09)
 
 | Etapa | Status |
@@ -22,12 +49,6 @@ Side project solo. O backend (motor de regras + API) está funcional e testado p
 | Conteúdo real — Azure Data Engineer Associate (DP-203) | ⏳ não iniciado |
 | Supabase real conectado (hoje roda em SQLite local) | ⏳ próximo passo |
 | Frontend Flutter | ✅ telas do core loop implementadas (dev target Linux); protótipo visual das 10 telas completo |
-
-## Screenshots
-
-<img src="docs/screenshots/track-screen.png" alt="Trilha de tópicos do CertFly (Flutter Web, build local)" width="320" />
-
-*Trilha de tópicos rodando localmente (Flutter Web + backend FastAPI local, sem Supabase real).*
 
 ## Contexto
 
